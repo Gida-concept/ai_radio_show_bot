@@ -184,53 +184,66 @@ class CharacterManager:
 
     def _adapt_persona_to_gender(self, persona: str, guest_gender: str) -> str:
         """
-        Adapts persona pronouns to match the guest's gender.
-        
-        Examples:
-        - "She wants kids but he got a vasectomy" (female) → unchanged
-        - "She wants kids but he got a vasectomy" (male) → "He wants kids but she got a vasectomy"
+        Adapts persona pronouns and nouns to match the guest's gender.
+        Uses a robust swap logic to ensure 'Man' becomes 'Woman' and 'Boyfriend' becomes 'Girlfriend'.
         """
         if guest_gender == 'female':
-            # Persona is written for female guest, no change needed
+            # Persona is typically written for female guest by default in the list
             return persona
-        else:
-            # Persona written for female, flip to male perspective
-            # Replace pronouns (she→he, her→him/his, woman→man, girlfriend→boyfriend, etc.)
-            adapted = persona
-            
-            # Swap gendered pronouns
-            adapted = adapted.replace("She's", "He's")
-            adapted = adapted.replace("she's", "he's")
-            adapted = adapted.replace("She ", "He ")
-            adapted = adapted.replace("she ", "he ")
-            adapted = adapted.replace(" her ", " him ")
-            adapted = adapted.replace("Her ", "His ")
-            adapted = adapted.replace(" her.", " him.")
-            adapted = adapted.replace("herself", "himself")
-            
-            # Swap relationship terms
-            adapted = adapted.replace("girlfriend", "boyfriend")
-            adapted = adapted.replace("wife", "husband")
-            adapted = adapted.replace("fiancée", "fiancé")
-            adapted = adapted.replace("bride", "groom")
-            adapted = adapted.replace("mother-in-law", "father-in-law")
-            adapted = adapted.replace("sister", "brother")
-            adapted = adapted.replace("daughter", "son")
-            adapted = adapted.replace("woman", "man")
-            adapted = adapted.replace("girl", "guy")
-            adapted = adapted.replace("nanny", "male nanny")
-            
-            # Reverse swap (he→she) for the EX/partner in the story
-            # This is tricky - we need context. For now, handle common patterns
-            adapted = adapted.replace("he got", "she got")
-            adapted = adapted.replace("he spent", "she spent")
-            adapted = adapted.replace("he slept", "she slept")
-            adapted = adapted.replace("he cheated", "she cheated")
-            adapted = adapted.replace("he left", "she left")
-            adapted = adapted.replace("his boss", "her boss")
-            adapted = adapted.replace("his best friend", "her best friend")
-            adapted = adapted.replace("his phone", "her phone")
-            adapted = adapted.replace("his car", "her car")
-            adapted = adapted.replace("his ex", "her ex")
-            
-            return adapted
+        
+        # Guest is MALE. We must flip the script (Female -> Male).
+        text = persona
+
+        # 1. Special case fixes before general swap
+        text = text.replace("She's pregnant", "His girlfriend is pregnant")
+        text = text.replace("she's pregnant", "his girlfriend is pregnant")
+        text = text.replace("nanny", "male nanny")
+
+        # 2. Pronoun Swap: Subject (She->He) and Possessive (Her->His)
+        # Note: "Her" is mostly possessive in this list, but can be object.
+        text = text.replace("She's", "He's")
+        text = text.replace("she's", "he's")
+        text = text.replace("She ", "He ")
+        text = text.replace("she ", "he ")
+        text = text.replace("Her ", "His ")
+        text = text.replace("herself", "himself")
+        
+        # Handle "her" as object vs possessive
+        # Default replace " her " with " his " (possessive dominant)
+        text = text.replace(" her ", " his ")
+        # Fix specific object cases created by above, or existing
+        text = text.replace("left his", "left him") 
+        text = text.replace(" her.", " him.")
+
+        # 3. Pronoun Swap: Partner/Object (He->She, Him->Her)
+        text = text.replace(" he ", " she ")
+        text = text.replace("He ", "She ")
+        text = text.replace(" him ", " her ")
+        text = text.replace(" him.", " her.")
+        text = text.replace(" his ", " her ")
+
+        # 4. Noun Swaps (Using placeholders to avoid overwriting)
+        # e.g. "man" -> "woman", "husband" -> "wife"
+        swaps = [
+            ("husband", "wife"), ("wife", "husband"),
+            ("boyfriend", "girlfriend"), ("girlfriend", "boyfriend"),
+            ("fiancé", "fiancée"), ("fiancée", "fiancé"),
+            ("man", "woman"), ("woman", "man"),
+            ("girl", "guy"), ("guy", "girl"),
+            ("mother", "father"), ("father", "mother"),
+            ("daughter", "son"), ("son", "daughter"),
+            ("sister", "brother"), ("brother", "sister")
+        ]
+        
+        for i, (src, tgt) in enumerate(swaps):
+            placeholder = f"__SWAP_{i}__"
+            # Use case-insensitive replace for safety, then restore target
+            text = text.replace(src, placeholder)
+            text = text.replace(src.capitalize(), placeholder) # simple cap check
+
+        # Restore placeholders to target words
+        for i, (src, tgt) in enumerate(swaps):
+            placeholder = f"__SWAP_{i}__"
+            text = text.replace(placeholder, tgt)
+
+        return text
