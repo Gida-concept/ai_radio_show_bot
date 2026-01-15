@@ -235,7 +235,9 @@ Match the emotional arc to the story type.
 
 ---
 
-**OUTPUT FORMAT:**
+**OUTPUT FORMAT - RETURN ONLY VALID JSON:**
+
+You must return your response as a JSON object with this exact structure:
 
 {{
   "dialogue": [
@@ -244,6 +246,8 @@ Match the emotional arc to the story type.
     {{"speaker_id": {host['id']}, "text": "[Follow-up question based on their answer]"}}
   ]
 }}
+
+No markdown formatting. No explanations. Just valid JSON.
 
 **ABSOLUTE REQUIREMENTS:**
 1. ONLY use speaker_id: {host['id']} for {host['name']}, {guest['id']} for {guest['name']}
