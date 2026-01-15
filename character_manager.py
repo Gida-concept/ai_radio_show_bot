@@ -1,7 +1,7 @@
 """
 character_manager.py
 - ROTATIONAL HOSTS (Jack or Olivia).
-- OPPOSITE GENDER GUESTS.
+- OPPOSITE GENDER GUESTS (Auto-generated).
 - 100+ DEEP EMOTIONAL PERSONAS.
 """
 
@@ -131,19 +131,20 @@ class CharacterManager:
         self.logger = logging.getLogger(__name__)
         self.static_hosts = self._load_static_characters()
         self.characters_by_id = {char['id']: char for char in self.static_hosts}
+        self.guest_id_counter = 100  # Incrementing guest IDs starting at 100
 
     def _load_static_characters(self) -> List[Dict[str, Any]]:
-        # Jack and Olivia are the only permanent residents
+        # Jack and Olivia are the only permanent hosts
         return [
             {"id": 1, "name": "Jack", "gender": "male", "voice": "host_male"},
             {"id": 2, "name": "Olivia", "gender": "female", "voice": "host_female"}
         ]
 
     def select_show_participants(self) -> Dict[str, List[Dict[str, Any]]]:
-        # 1. Randomly pick ONE host
+        # 1. Randomly pick ONE host (Jack or Olivia)
         host = random.choice(self.static_hosts)
         
-        # 2. Generate OPPOSITE gender guest
+        # 2. Generate OPPOSITE gender guest with unique ID
         if host['gender'] == 'male':
             guest_name = random.choice(FEMALE_NAMES)
             guest_gender = 'female'
@@ -151,16 +152,20 @@ class CharacterManager:
             guest_name = random.choice(MALE_NAMES)
             guest_gender = 'male'
 
+        # Assign unique incrementing ID
+        guest_id = self.guest_id_counter
+        self.guest_id_counter += 1
+
         guest = {
-            "id": 100,
+            "id": guest_id,
             "name": guest_name,
             "gender": guest_gender,
-            "voice": "guest_voice", # The engine will map this based on gender
+            "voice": "guest_voice",  # Voice engine will map based on gender
             "persona": random.choice(RELATIONSHIP_STATUSES)
         }
 
-        # Update lookup
-        self.characters_by_id[100] = guest
+        # Update lookup dictionary
+        self.characters_by_id[guest_id] = guest
 
         self.logger.info(f"Show Cast: Host={host['name']} ({host['gender']}) vs Guest={guest['name']} ({guest['gender']})")
         self.logger.info(f"Topic: {guest['persona']}")
@@ -171,4 +176,4 @@ class CharacterManager:
         }
 
     def get_character_by_id(self, character_id: int) -> Dict[str, Any]:
-        return self.characters_by_id[character_id]
+        return self.characters_by_id.get(character_id, self.characters_by_id[1])  # Fallback to Jack if not found
