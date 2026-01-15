@@ -19,20 +19,16 @@ import config
 from character_manager import CharacterManager
 
 # --- Coqui TTS Model & Speaker Mapping ---
-# This dictionary maps the abstract voice names from characters.json to actual
-# Coqui TTS models and specific speakers within those models.
-#
-# YOU MUST DOWNLOAD/PROVIDE THESE MODELS FOR TTS TO WORK.
-# Example using VCTK model (multi-speaker):
-#   - Model: "tts_models/en/vctk/vits"
-#   - Speakers: "p225" (male), "p226" (female), "p227" (male), etc.
-#
-# Update this map based on the models you have installed.
+# UPDATED MAPPING FOR DISTINCT GENDERS (VCTK Model)
+# p226: Deep Male voice (Good for Host Jack)
+# p225: Clear Female voice (Good for Host Olivia)
+# p232: Distinct Male voice (Good for Guest Ryan)
+# p228: Distinct Female voice (Good for Guest Mia)
 VOICE_MODEL_MAP = {
-    "vits_male_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p228"},
-    "vits_female_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p232"},
-    "vits_male_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p231"},
-    "vits_female_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p230"},
+    "vits_male_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p226"},   # Host Male
+    "vits_female_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p225"}, # Host Female
+    "vits_male_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p232"},   # Guest Male
+    "vits_female_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p228"}, # Guest Female
 }
 
 
@@ -73,7 +69,7 @@ class VoiceEngine:
                 self.logger.critical(f"CRITICAL: Failed to load TTS model '{model_name}'. Error: {e}")
                 # This is a fatal error, so we raise it to stop the application.
                 raise RuntimeError(f"Could not load required TTS model: {model_name}") from e
-
+        
         self.logger.info("All TTS models initialized successfully.")
         return loaded_models
 
@@ -91,11 +87,11 @@ class VoiceEngine:
             - A list of dictionaries with metadata for each line (path, duration_ms, speaker_id).
         """
         self.logger.info(f"[{show_id}] Starting audio generation for {len(script)} script lines.")
-
+        
         # Create a dedicated directory for this show's audio parts
         show_audio_dir = config.AUDIO_DIR / show_id
         show_audio_dir.mkdir(parents=True, exist_ok=True)
-
+        
         line_audio_metadata = []
         combined_audio = AudioSegment.silent(duration=0)
 
@@ -107,21 +103,20 @@ class VoiceEngine:
             try:
                 character = self.character_manager.get_character_by_id(speaker_id)
                 voice_key = character["voice"]
-
+                
                 if voice_key not in VOICE_MODEL_MAP:
-                    raise ValueError(
-                        f"Voice '{voice_key}' for character '{character['name']}' not found in VOICE_MODEL_MAP.")
+                    raise ValueError(f"Voice '{voice_key}' for character '{character['name']}' not found in VOICE_MODEL_MAP.")
 
                 model_info = VOICE_MODEL_MAP[voice_key]
                 model_name = model_info["model_name"]
-                speaker = model_info.get("speaker")  # Use .get() for flexibility
+                speaker = model_info.get("speaker") # Use .get() for flexibility
 
                 tts_instance = self.tts_models[model_name]
 
-                self.logger.debug(
-                    f"Generating line {i + 1}/{len(script)} for speaker {speaker_id} ('{character['name']}').")
+                self.logger.debug(f"Generating line {i+1}/{len(script)} for speaker {speaker_id} ('{character['name']}').")
 
                 # Generate audio file for the line
+                # Note: We rely on the model loaded in __init__
                 tts_instance.tts_to_file(
                     text=text,
                     speaker=speaker,
@@ -142,10 +137,8 @@ class VoiceEngine:
 
             except Exception as e:
                 self.logger.error(f"Failed to generate audio for line {i}: '{text}'. Error: {e}")
-                # We'll continue, but this might result in a gap in the audio.
-                # A more robust system might halt or retry.
                 continue
-
+        
         # Export the final combined audio track
         master_audio_path = config.AUDIO_DIR / f"master_audio_{show_id}.wav"
         combined_audio.export(master_audio_path, format="wav")
