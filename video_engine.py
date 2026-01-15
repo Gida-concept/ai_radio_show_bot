@@ -11,6 +11,7 @@ import ffmpeg
 import logging
 from pathlib import Path
 import math
+from typing import List  # <--- Added this
 
 import config
 
@@ -172,4 +173,5 @@ class VideoEngine:
         except ffmpeg.Error as e:
             self.logger.critical(f"[{self.show_id}] FFmpeg error during video splitting.")
             self.logger.error(f"FFmpeg stderr: {e.stderr.decode('utf8')}")
+
             raise RuntimeError("FFmpeg failed to split the video.") from e
