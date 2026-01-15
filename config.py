@@ -69,7 +69,7 @@ PART_DURATION_SECONDS = 150
 
 # --- Groq Configuration ---
 # Model for text generation. Llama3 70b is great for creative, conversational content.
-GROQ_LLM_MODEL = "llama3-70b-8192"
+GROQ_LLM_MODEL = "llama-3.3-70b-versatile"
 
 # Model for speech-to-text (subtitles). Whisper Large v3 is the most accurate.
 GROQ_WHISPER_MODEL = "whisper-large-v3"
@@ -113,3 +113,4 @@ if not GROQ_API_KEY:
 
 
 print("Configuration loaded successfully.")
+
