@@ -1,8 +1,8 @@
 """
 voice_engine.py
-- RESTORED TO STABLE GENERATIVE VERSION.
-- 4 DISTINCT VOICES (VCTK Model).
-- LOGS VISIBLE.
+- PURE 4-VOICE MAPPING (p226, p225, p237, p236).
+- NO TEXT MANIPULATION (Clean Audio).
+- VISIBLE LOGGING (You can see who speaks).
 """
 
 import torch
@@ -14,11 +14,11 @@ from pydub import AudioSegment
 import config
 from character_manager import CharacterManager
 
-# --- VOICE MAPPING (Generative VCTK) ---
+# --- VOICE MAPPING ---
 # p226: Deep Male (Host Jack)
 # p225: Clear Female (Host Olivia)
 # p237: Distinct Male (Guest Ryan/Leo)
-# p236: Distinct Female (Guest Mia/Chloe)
+# p236: High-Pitch Female (Guest Mia/Chloe)
 VOICE_MODEL_MAP = {
     # HOSTS
     "vits_male_01":   {"speaker": "p226"},
@@ -37,7 +37,6 @@ class VoiceEngine:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.logger.info(f"TTS will use device: {self.device.upper()}")
         
-        # Load VCTK Model (Generative)
         self.logger.info("Initializing Coqui TTS model (vctk/vits)...")
         try:
             self.tts = TTS("tts_models/en/vctk/vits").to(self.device)
@@ -76,13 +75,14 @@ class VoiceEngine:
                 # VISIBLE LOGGING
                 self.logger.info(f"Line {i+1}: {character['name']} ({character['gender']}) -> Speaker {speaker}")
 
-                # 3. Generate
+                # 3. Generate Audio (Clean)
                 self.tts.tts_to_file(
                     text=text,
                     speaker=speaker,
                     file_path=str(line_filename)
                 )
 
+                # 4. Add to master track
                 segment = AudioSegment.from_wav(line_filename)
                 combined_audio += segment
                 line_audio_metadata.append({"path": str(line_filename), "duration": len(segment)})
