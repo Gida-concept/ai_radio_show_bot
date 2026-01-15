@@ -1,10 +1,8 @@
 """
 voice_engine.py
-
-Handles all text-to-speech (TTS) operations using Coqui TTS.
-- ENFORCES 4 DISTINCT VOICES (2 MALE, 2 FEMALE).
-- INCLUDES GENDER SAFETY FALLBACK.
-- LOGS EVERY SPEAKER ASSIGNMENT VISIBLY.
+- ENFORCES 4 DISTINCT VOICES.
+- NEW MAPPING: Uses p236 for Female Guest (Clearer/Higher Pitch).
+- LOGS VISIBLY.
 """
 
 import torch
@@ -16,34 +14,29 @@ from pydub import AudioSegment
 import config
 from character_manager import CharacterManager
 
-# --- VOICE MAPPING ---
-# Maps abstract character voice keys to specific VCTK Speaker IDs.
+# --- VOICE MAPPING (UPDATED) ---
 # p226: Deep Male (Host Jack)
 # p225: Clear Female (Host Olivia)
-# p232: Distinct Male (Guest Ryan/Leo)
-# p228: Distinct Female (Guest Mia/Chloe)
+# p237: Distinct Male (Guest Ryan/Leo) - CHANGED from p232
+# p236: High-Pitch Female (Guest Mia/Chloe) - CHANGED from p228
 VOICE_MODEL_MAP = {
     # HOSTS
     "vits_male_01":   {"speaker": "p226"},
     "vits_female_01": {"speaker": "p225"},
     
     # GUESTS
-    "vits_male_02":   {"speaker": "p232"},
-    "vits_female_02": {"speaker": "p228"},
+    "vits_male_02":   {"speaker": "p237"}, # NEW Male Guest
+    "vits_female_02": {"speaker": "p236"}, # NEW Female Guest
 }
 
 class VoiceEngine:
-    """Manages TTS models and audio generation."""
-
     def __init__(self, character_manager: CharacterManager):
         self.logger = logging.getLogger(__name__)
         self.character_manager = character_manager
         
-        # Check for GPU
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.logger.info(f"TTS will use device: {self.device.upper()}")
         
-        # Load the VCTK VITS Model
         self.logger.info("Initializing Coqui TTS model (vctk/vits)...")
         try:
             self.tts = TTS("tts_models/en/vctk/vits").to(self.device)
@@ -67,43 +60,34 @@ class VoiceEngine:
             line_filename = show_audio_dir / f"line_{i:03d}_{speaker_id}.wav"
 
             try:
-                # 1. Look up the character
+                # 1. Look up character
                 character = self.character_manager.get_character_by_id(speaker_id)
-                voice_key = character["voice"] # e.g., "vits_female_02"
+                voice_key = character["voice"]
                 
-                # 2. Determine Speaker ID
+                # 2. Determine Speaker
                 if voice_key in VOICE_MODEL_MAP:
-                    # Ideal case: We have a specific map for this key (e.g. Guest Female -> p228)
                     speaker = VOICE_MODEL_MAP[voice_key]["speaker"]
                 else:
-                    # Fallback Logic:
-                    # If the key is missing (e.g. "vits_female_03"), we MUST check gender
-                    # to prevent a female using a male voice.
+                    # Fallback based on gender to be safe
                     if character['gender'] == 'male':
-                        speaker = "p226" # Default to Host Male voice
+                        speaker = "p226"
                     else:
-                        speaker = "p225" # Default to Host Female voice
-                    self.logger.warning(f"Voice key '{voice_key}' not found. Fallback to {speaker} based on gender.")
+                        speaker = "p225"
+                    self.logger.warning(f"Voice key '{voice_key}' not found. Fallback to {speaker}.")
 
-                # --- VISIBLE LOGGING (INFO LEVEL) ---
+                # VISIBLE LOGGING
                 self.logger.info(f"Line {i+1}: {character['name']} ({character['gender']}) -> Speaker {speaker}")
-                # ------------------------------------
 
-                # 3. Generate audio
-                self.tts.tts_to_file(
-                    text=text,
-                    speaker=speaker,
-                    file_path=str(line_filename)
-                )
+                # 3. Generate
+                self.tts.tts_to_file(text=text, speaker=speaker, file_path=str(line_filename))
 
-                # 4. Add to master track
+                # 4. Combine
                 line_audio = AudioSegment.from_wav(line_filename)
-                duration_ms = len(line_audio)
                 combined_audio += line_audio
 
                 line_audio_metadata.append({
                     "path": str(line_filename),
-                    "duration_ms": duration_ms,
+                    "duration_ms": len(line_audio),
                     "speaker_id": speaker_id,
                     "text": text,
                 })
@@ -112,7 +96,6 @@ class VoiceEngine:
                 self.logger.error(f"Failed to generate audio for line {i}: '{text}'. Error: {e}")
                 continue
         
-        # Export the final combined audio track
         master_audio_path = config.AUDIO_DIR / f"master_audio_{show_id}.wav"
         combined_audio.export(master_audio_path, format="wav")
 
