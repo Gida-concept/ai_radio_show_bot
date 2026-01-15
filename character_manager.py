@@ -156,12 +156,16 @@ class CharacterManager:
         guest_id = self.guest_id_counter
         self.guest_id_counter += 1
 
+        # Pick a random persona and adapt it to match guest's gender
+        raw_persona = random.choice(RELATIONSHIP_STATUSES)
+        adapted_persona = self._adapt_persona_to_gender(raw_persona, guest_gender)
+
         guest = {
             "id": guest_id,
             "name": guest_name,
             "gender": guest_gender,
             "voice": "guest_voice",  # Voice engine will map based on gender
-            "persona": random.choice(RELATIONSHIP_STATUSES)
+            "persona": adapted_persona
         }
 
         # Update lookup dictionary
@@ -177,3 +181,56 @@ class CharacterManager:
 
     def get_character_by_id(self, character_id: int) -> Dict[str, Any]:
         return self.characters_by_id.get(character_id, self.characters_by_id[1])  # Fallback to Jack if not found
+
+    def _adapt_persona_to_gender(self, persona: str, guest_gender: str) -> str:
+        """
+        Adapts persona pronouns to match the guest's gender.
+        
+        Examples:
+        - "She wants kids but he got a vasectomy" (female) → unchanged
+        - "She wants kids but he got a vasectomy" (male) → "He wants kids but she got a vasectomy"
+        """
+        if guest_gender == 'female':
+            # Persona is written for female guest, no change needed
+            return persona
+        else:
+            # Persona written for female, flip to male perspective
+            # Replace pronouns (she→he, her→him/his, woman→man, girlfriend→boyfriend, etc.)
+            adapted = persona
+            
+            # Swap gendered pronouns
+            adapted = adapted.replace("She's", "He's")
+            adapted = adapted.replace("she's", "he's")
+            adapted = adapted.replace("She ", "He ")
+            adapted = adapted.replace("she ", "he ")
+            adapted = adapted.replace(" her ", " him ")
+            adapted = adapted.replace("Her ", "His ")
+            adapted = adapted.replace(" her.", " him.")
+            adapted = adapted.replace("herself", "himself")
+            
+            # Swap relationship terms
+            adapted = adapted.replace("girlfriend", "boyfriend")
+            adapted = adapted.replace("wife", "husband")
+            adapted = adapted.replace("fiancée", "fiancé")
+            adapted = adapted.replace("bride", "groom")
+            adapted = adapted.replace("mother-in-law", "father-in-law")
+            adapted = adapted.replace("sister", "brother")
+            adapted = adapted.replace("daughter", "son")
+            adapted = adapted.replace("woman", "man")
+            adapted = adapted.replace("girl", "guy")
+            adapted = adapted.replace("nanny", "male nanny")
+            
+            # Reverse swap (he→she) for the EX/partner in the story
+            # This is tricky - we need context. For now, handle common patterns
+            adapted = adapted.replace("he got", "she got")
+            adapted = adapted.replace("he spent", "she spent")
+            adapted = adapted.replace("he slept", "she slept")
+            adapted = adapted.replace("he cheated", "she cheated")
+            adapted = adapted.replace("he left", "she left")
+            adapted = adapted.replace("his boss", "her boss")
+            adapted = adapted.replace("his best friend", "her best friend")
+            adapted = adapted.replace("his phone", "her phone")
+            adapted = adapted.replace("his car", "her car")
+            adapted = adapted.replace("his ex", "her ex")
+            
+            return adapted
