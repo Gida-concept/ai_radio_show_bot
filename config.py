@@ -91,10 +91,10 @@ AVAILABLE_VOICES = [
 # Provide URLs to long-running background video and music.
 # Using creative commons / royalty-free sources is recommended.
 # Example: A long, looping animation or a static image with subtle movement.
-BACKGROUND_VIDEO_URL = "https://pixabay.com/videos/download/video-4690_large.mp4" # Looping abstract background
+BACKGROUND_VIDEO_URL = "https://res.cloudinary.com/dv0unfuhw/video/upload/v1767956316/qg35pfueznxeene9xmhi.mp4" # Looping abstract background
 
 # Example: A long, royalty-free lo-fi or ambient music track.
-BACKGROUND_MUSIC_URL = "https://cdn.pixabay.com/download/audio/2022/11/21/audio_a1bf6f2122.mp3" # Ambient lofi track
+BACKGROUND_MUSIC_URL = "https://res.cloudinary.com/dv0unfuhw/video/upload/v1767958481/sndhmaxhxvpz1veablza.mp3" # Ambient lofi track
 
 # --- Posting Engine ---
 # Template for the social media post caption.
@@ -110,5 +110,6 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(module)s - %(message)s"
 # Basic checks to ensure critical configurations are set.
 if not GROQ_API_KEY:
     raise ValueError("CRITICAL: GROQ_API_KEY is not set in the environment or .env file.")
+
 
 print("Configuration loaded successfully.")
