@@ -1,94 +1,42 @@
 """
 voice_engine.py
-
-Handles all text-to-speech (TTS) operations using Coqui TTS.
-- Loads specified TTS models into memory.
-- Generates speech for each line of the script with the correct character voice.
-- Measures the duration of each generated audio clip.
-- Concatenates individual audio clips into a single master audio track for the show.
+STRICT GENDER ENFORCEMENT.
 """
-
-import os
 import torch
 import logging
 from typing import List, Dict, Any, Tuple
 from TTS.api import TTS
 from pydub import AudioSegment
-
 import config
 from character_manager import CharacterManager
 
-# --- Coqui TTS Model & Speaker Mapping ---
-# UPDATED MAPPING FOR DISTINCT GENDERS (VCTK Model)
-# p226: Deep Male voice (Good for Host Jack)
-# p225: Clear Female voice (Good for Host Olivia)
-# p232: Distinct Male voice (Good for Guest Ryan)
-# p228: Distinct Female voice (Good for Guest Mia)
+# --- STRICT VOICE MAPPING ---
+# We force ALL males to 'p226' and ALL females to 'p225'.
+# There is no chance of error with this map.
 VOICE_MODEL_MAP = {
-    "vits_male_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p226"},   # Host Male
-    "vits_female_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p225"}, # Host Female
-    "vits_male_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p232"},   # Guest Male
-    "vits_female_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p228"}, # Guest Female
+    # MALE VOICES
+    "vits_male_01":   {"model_name": "tts_models/en/vctk/vits", "speaker": "p226"},
+    "vits_male_02":   {"model_name": "tts_models/en/vctk/vits", "speaker": "p226"},
+    
+    # FEMALE VOICES
+    "vits_female_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p225"},
+    "vits_female_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p225"},
 }
 
-
 class VoiceEngine:
-    """Manages TTS models and audio generation."""
-
     def __init__(self, character_manager: CharacterManager):
-        """
-        Initializes the VoiceEngine.
-
-        Args:
-            character_manager: An instance of CharacterManager to resolve character details.
-        """
         self.logger = logging.getLogger(__name__)
         self.character_manager = character_manager
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.logger.info(f"TTS will use device: {self.device.upper()}")
-        self.tts_models = self._initialize_tts_models()
-
-    def _initialize_tts_models(self) -> Dict[str, TTS]:
-        """
-        Loads all unique TTS models specified in VOICE_MODEL_MAP into memory.
-
-        Returns:
-            A dictionary mapping model names to loaded TTS objects.
-        """
-        loaded_models = {}
-        unique_model_names = set(v['model_name'] for v in VOICE_MODEL_MAP.values())
-
-        self.logger.info("Initializing Coqui TTS models...")
-        for model_name in unique_model_names:
-            try:
-                self.logger.info(f"Loading TTS model: {model_name}")
-                # Note: `progress_bar=False` is good for non-interactive server logs
-                loaded_models[model_name] = TTS(model_name).to(self.device)
-                self.logger.info(f"Successfully loaded {model_name}")
-            except Exception as e:
-                self.logger.critical(f"CRITICAL: Failed to load TTS model '{model_name}'. Error: {e}")
-                # This is a fatal error, so we raise it to stop the application.
-                raise RuntimeError(f"Could not load required TTS model: {model_name}") from e
+        self.logger.info(f"TTS Device: {self.device}")
         
-        self.logger.info("All TTS models initialized successfully.")
-        return loaded_models
+        # Load the VITS model once
+        self.logger.info("Loading VCTK VITS Model...")
+        self.tts = TTS("tts_models/en/vctk/vits").to(self.device)
+        self.logger.info("Model Loaded.")
 
     def generate_show_audio(self, script: List[Dict[str, Any]], show_id: str) -> Tuple[str, List[Dict[str, Any]]]:
-        """
-        Generates audio for an entire script and concatenates it into a single file.
-
-        Args:
-            script: A list of script lines (dictionaries with 'speaker_id', 'text').
-            show_id: A unique identifier for the show run (e.g., timestamp).
-
-        Returns:
-            A tuple containing:
-            - The file path to the final concatenated master audio file.
-            - A list of dictionaries with metadata for each line (path, duration_ms, speaker_id).
-        """
-        self.logger.info(f"[{show_id}] Starting audio generation for {len(script)} script lines.")
-        
-        # Create a dedicated directory for this show's audio parts
+        self.logger.info(f"[{show_id}] Generating audio for {len(script)} lines...")
         show_audio_dir = config.AUDIO_DIR / show_id
         show_audio_dir.mkdir(parents=True, exist_ok=True)
         
@@ -98,53 +46,30 @@ class VoiceEngine:
         for i, line in enumerate(script):
             speaker_id = line["speaker_id"]
             text = line["text"]
-            line_filename = show_audio_dir / f"line_{i:03d}_speaker_{speaker_id}.wav"
+            line_filename = show_audio_dir / f"line_{i:03d}_{speaker_id}.wav"
 
             try:
-                character = self.character_manager.get_character_by_id(speaker_id)
-                voice_key = character["voice"]
+                char = self.character_manager.get_character_by_id(speaker_id)
+                voice_key = char["voice"]
                 
-                if voice_key not in VOICE_MODEL_MAP:
-                    raise ValueError(f"Voice '{voice_key}' for character '{character['name']}' not found in VOICE_MODEL_MAP.")
+                # FORCE GENDER CHECK
+                if char['gender'] == 'male':
+                    speaker = 'p226' # Always Male
+                else:
+                    speaker = 'p225' # Always Female
+                
+                self.logger.info(f"Line {i}: {char['name']} ({char['gender']}) -> Speaker {speaker}")
 
-                model_info = VOICE_MODEL_MAP[voice_key]
-                model_name = model_info["model_name"]
-                speaker = model_info.get("speaker") # Use .get() for flexibility
+                self.tts.tts_to_file(text=text, speaker=speaker, file_path=str(line_filename))
 
-                tts_instance = self.tts_models[model_name]
-
-                self.logger.debug(f"Generating line {i+1}/{len(script)} for speaker {speaker_id} ('{character['name']}').")
-
-                # Generate audio file for the line
-                # Note: We rely on the model loaded in __init__
-                tts_instance.tts_to_file(
-                    text=text,
-                    speaker=speaker,
-                    file_path=str(line_filename)
-                )
-
-                # Measure duration and add to the combined track
-                line_audio = AudioSegment.from_wav(line_filename)
-                duration_ms = len(line_audio)
-                combined_audio += line_audio
-
-                line_audio_metadata.append({
-                    "path": str(line_filename),
-                    "duration_ms": duration_ms,
-                    "speaker_id": speaker_id,
-                    "text": text,
-                })
+                segment = AudioSegment.from_wav(line_filename)
+                combined_audio += segment
+                line_audio_metadata.append({"path": str(line_filename), "duration": len(segment)})
 
             except Exception as e:
-                self.logger.error(f"Failed to generate audio for line {i}: '{text}'. Error: {e}")
+                self.logger.error(f"Error on line {i}: {e}")
                 continue
         
-        # Export the final combined audio track
-        master_audio_path = config.AUDIO_DIR / f"master_audio_{show_id}.wav"
-        combined_audio.export(master_audio_path, format="wav")
-
-        total_duration_s = len(combined_audio) / 1000
-        self.logger.info(f"[{show_id}] Master audio track created at: {master_audio_path}")
-        self.logger.info(f"[{show_id}] Total audio duration: {total_duration_s:.2f} seconds.")
-
-        return str(master_audio_path), line_audio_metadata
+        master_path = config.AUDIO_DIR / f"master_audio_{show_id}.wav"
+        combined_audio.export(master_path, format="wav")
+        return str(master_path), line_audio_metadata
