@@ -1,8 +1,8 @@
 """
 show_engine.py
-- VIRAL/ENGAGING PROMPT (Drama, Humor).
-- SAFETY LAYER (Fixes Name vs ID errors).
-- ENFORCES EXTREME LENGTH (100+ lines) by mandating section lengths.
+- VIRAL/ENGAGING PROMPT.
+- ENFORCES EXTREME LENGTH (100+ lines).
+- ENFORCES EMOTIONAL TAGGING (Anger, Shock, Laughter) to trigger Voice Engine.
 """
 import json
 import logging
@@ -18,44 +18,43 @@ class ShowEngine:
         self.client = Groq(api_key=config.GROQ_API_KEY)
 
     def generate_script(self, hosts: List[Dict], guests: List[Dict], show_id: str) -> List[Dict[str, Any]]:
-        self.logger.info(f"[{show_id}] Generating LONG VIRAL script...")
+        self.logger.info(f"[{show_id}] Generating LONG VIRAL script with EMOTIONS...")
         
         host_names = ", ".join([h['name'] for h in hosts])
         guest_names = ", ".join([g['name'] for g in guests])
         
         prompt = f"""
         You are the head writer for a viral Facebook Watch dating show.
-        **GOAL:** Generate a massive, detailed script (8-10 minutes spoken time).
+        **GOAL:** Generate a massive, detailed script (8-10 minutes spoken time) full of DRAMA and EMOTION.
 
         **THE CAST:**
         Hosts: {host_names} (Gossipy, funny, opinionated).
         Guests: {guest_names} (Just finished a first date).
 
+        **CRITICAL EMOTION INSTRUCTIONS:**
+        You MUST use the "emotion" key to direct the voice acting. Do not use "neutral" often.
+        Use these specific keywords to trigger special voice effects:
+        1.  **"shouting" / "angry"**: For arguments. (e.g., "YOU DID WHAT?!")
+        2.  **"nervous" / "awkward"**: For embarrassing admissions. (e.g., "I... um... forgot my wallet.")
+        3.  **"shocked" / "disbelief"**: When hearing crazy details. (e.g., "NO. WAY.")
+        4.  **"laughing" / "excited"**: For funny moments.
+        5.  **"whisper" / "sarcastic"**: For shade and secrets.
+
         **MANDATORY LENGTH INSTRUCTIONS:**
         You MUST generate a JSON array containing **AT LEAST 100 OBJECTS (Lines of dialogue)**.
-        Do not summarize. Do not rush. You must write out every single awkward pause and argument.
+        Do not summarize. Write out every single awkward pause and argument.
 
-        **REQUIRED SCENE BREAKDOWN (Follow this exactly to get length):**
-        1.  **THE HOOK (20 Lines):** 
-            - Start mid-conversation about a viral topic or the weather. 
-            - Then tease the date: "Folks, you are not going to believe what happened at Olive Garden tonight."
-        2.  **THE MEET CUTE (20 Lines):** 
-            - How did they meet? (Tinder? A bar?). 
-            - First impressions (Was he shorter than his profile? Did she look like her photos?).
-        3.  **THE DATE DISASTER (40 Lines):** 
-            - **This is the main event.** Go into extreme detail.
-            - What did they eat? (Describe the smell/taste).
-            - What went wrong? (Rude waiter? Ex-girlfriend showed up? Spilled drink?).
-            - Hosts must interrupt constantly with reactions ("NO WAY!", "Stop it!").
-        4.  **THE VERDICT (20 Lines):** 
-            - The debate. Hosts take sides.
-            - The final question: Second Date? Yes or No.
-            - The outro.
+        **REQUIRED SCENE BREAKDOWN:**
+        1.  **THE HOOK (20 Lines):** Start mid-conversation. High energy. Tease the drama.
+        2.  **THE MEET CUTE (20 Lines):** First impressions. Be specific (e.g., "He looked shorter than his bio").
+        3.  **THE DATE DISASTER (40 Lines):** **Main Event.** Sensory details (smells, tastes). rude waiters, spilled drinks, ex-lovers appearing.
+            - *Requirement:* At least one person must get **"angry"** or **"shocked"** here.
+        4.  **THE VERDICT (20 Lines):** The debate. The final decision.
 
         **STYLE GUIDE:**
-        - Make it messy and real. Use slang. Use interruptions.
+        - Make it messy and real. Use slang.
         - **NO "Welcome to..." intros.**
-        - **NO cheesy radio voices.** Talk like real people on a podcast.
+        - **NO cheesy radio voices.**
 
         **OUTPUT FORMAT:**
         A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
@@ -65,7 +64,7 @@ class ShowEngine:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.85, # High creativity/volatility
+                temperature=0.85, # High creativity
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -84,7 +83,6 @@ class ShowEngine:
             cleaned_script = []
             for line in script:
                 sid = line.get('speaker_id')
-                # If sid is a Name string, convert to ID
                 if isinstance(sid, str):
                     if sid in name_map:
                         line['speaker_id'] = name_map[sid]
@@ -96,7 +94,6 @@ class ShowEngine:
 
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
             
-            # Warn if it's still short (shouldn't happen with this prompt)
             if len(script) < 80:
                 self.logger.warning(f"Script is shorter than requested ({len(script)} lines).")
 
