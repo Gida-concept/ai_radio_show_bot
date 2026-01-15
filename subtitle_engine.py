@@ -69,7 +69,8 @@ class SubtitleEngine:
                 transcription = self.client.audio.transcriptions.create(
                     file=(Path(master_audio_path).name, audio_file.read()),
                     model=config.GROQ_WHISPER_MODEL,
-                    response_format="verbose_json",  # Must be verbose_json for word timestamps
+                    response_format="verbose_json",
+                    timestamp_granularities=["word"]# Must be verbose_json for word timestamps
                     # language="en" # Optional: specify language
                 )
                 self.logger.info(f"[{show_id}] Successfully received transcription from Groq.")
@@ -107,4 +108,5 @@ class SubtitleEngine:
 
         except Exception as e:
             self.logger.critical(f"[{show_id}] An error occurred with the Groq Whisper API: {e}")
+
             raise  # Propagate the exception to halt the current show generation
