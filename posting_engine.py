@@ -9,11 +9,10 @@ Handles publishing video parts to social media platforms (Facebook).
 import time
 import logging
 import requests
-from pathlib import Path  # <--- Added this
+from pathlib import Path  # <--- THIS WAS MISSING
 from typing import List, Dict
 
 import config
-
 
 class PostingEngine:
     """Manages the posting of video content to social media."""
@@ -171,3 +170,4 @@ class PostingEngine:
         else:
 
             raise RuntimeError(f"Facebook API did not confirm success. Response: {finish_response.json()}")
+
