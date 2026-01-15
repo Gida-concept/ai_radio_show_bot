@@ -1,8 +1,8 @@
 """
 show_engine.py
 - VIRAL/ENGAGING PROMPT (Drama, Humor).
-- SAFETY LAYER: Automatically fixes Name vs ID errors.
-- ENFORCES LENGTH (80+ lines).
+- SAFETY LAYER (Fixes Name vs ID errors).
+- ENFORCES EXTREME LENGTH (100+ lines) by mandating section lengths.
 """
 import json
 import logging
@@ -18,31 +18,44 @@ class ShowEngine:
         self.client = Groq(api_key=config.GROQ_API_KEY)
 
     def generate_script(self, hosts: List[Dict], guests: List[Dict], show_id: str) -> List[Dict[str, Any]]:
-        self.logger.info(f"[{show_id}] Generating VIRAL/ENGAGING script...")
+        self.logger.info(f"[{show_id}] Generating LONG VIRAL script...")
         
         host_names = ", ".join([h['name'] for h in hosts])
         guest_names = ", ".join([g['name'] for g in guests])
         
         prompt = f"""
-        You are the head writer for a viral, high-energy dating show on Facebook Watch.
-        **Goal:** Create a script so funny, awkward, and engaging that listeners comment immediately.
+        You are the head writer for a viral Facebook Watch dating show.
+        **GOAL:** Generate a massive, detailed script (8-10 minutes spoken time).
 
         **THE CAST:**
-        Hosts: {host_names} (Messy, opinionated, love gossip).
+        Hosts: {host_names} (Gossipy, funny, opinionated).
         Guests: {guest_names} (Just finished a first date).
 
-        **INSTRUCTIONS:**
-        1.  **START HOT:** No "Welcome to...". Start mid-argument or mid-laugh.
-        2.  **CREATE TENSION:** Disagreements about who paid, rude waiters, or awkward silences.
-        3.  **SENSORY DETAILS:** "The sushi smelled like wet socks."
-        4.  **LENGTH:** **80 to 100 LINES**. Do not summarize. Write every dialogue line.
+        **MANDATORY LENGTH INSTRUCTIONS:**
+        You MUST generate a JSON array containing **AT LEAST 100 OBJECTS (Lines of dialogue)**.
+        Do not summarize. Do not rush. You must write out every single awkward pause and argument.
 
-        **STRUCTURE:**
-        1.  **The Hook (Min 0-1):** Hosts teasing the audience/guests.
-        2.  **The Backstory (Min 1-3):** How they met (Tinder nightmare?).
-        3.  **The Date (Min 3-6):** The disaster details.
-        4.  **The Debate (Min 6-7):** Hosts take sides. "Jack, you can't say that!"
-        5.  **The Verdict (Min 7+):** Second date? Yes/No.
+        **REQUIRED SCENE BREAKDOWN (Follow this exactly to get length):**
+        1.  **THE HOOK (20 Lines):** 
+            - Start mid-conversation about a viral topic or the weather. 
+            - Then tease the date: "Folks, you are not going to believe what happened at Olive Garden tonight."
+        2.  **THE MEET CUTE (20 Lines):** 
+            - How did they meet? (Tinder? A bar?). 
+            - First impressions (Was he shorter than his profile? Did she look like her photos?).
+        3.  **THE DATE DISASTER (40 Lines):** 
+            - **This is the main event.** Go into extreme detail.
+            - What did they eat? (Describe the smell/taste).
+            - What went wrong? (Rude waiter? Ex-girlfriend showed up? Spilled drink?).
+            - Hosts must interrupt constantly with reactions ("NO WAY!", "Stop it!").
+        4.  **THE VERDICT (20 Lines):** 
+            - The debate. Hosts take sides.
+            - The final question: Second Date? Yes or No.
+            - The outro.
+
+        **STYLE GUIDE:**
+        - Make it messy and real. Use slang. Use interruptions.
+        - **NO "Welcome to..." intros.**
+        - **NO cheesy radio voices.** Talk like real people on a podcast.
 
         **OUTPUT FORMAT:**
         A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
@@ -52,7 +65,7 @@ class ShowEngine:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.8,
+                temperature=0.85, # High creativity/volatility
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -67,28 +80,26 @@ class ShowEngine:
                 script = data
 
             # --- SAFETY LAYER: Fix Speaker IDs ---
-            # If the AI put "Jack" instead of ID 1, we fix it here.
             name_map = {c['name']: c['id'] for c in hosts + guests}
-            
             cleaned_script = []
             for line in script:
                 sid = line.get('speaker_id')
-                
                 # If sid is a Name string, convert to ID
                 if isinstance(sid, str):
                     if sid in name_map:
                         line['speaker_id'] = name_map[sid]
                         cleaned_script.append(line)
-                    else:
-                        self.logger.warning(f"Skipping line with unknown speaker name: {sid}")
-                # If sid is already an Int, keep it
                 elif isinstance(sid, int):
                     cleaned_script.append(line)
-            
             script = cleaned_script
             # -------------------------------------
 
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
+            
+            # Warn if it's still short (shouldn't happen with this prompt)
+            if len(script) < 80:
+                self.logger.warning(f"Script is shorter than requested ({len(script)} lines).")
+
             return script
 
         except Exception as e:
