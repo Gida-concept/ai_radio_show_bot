@@ -1,8 +1,8 @@
 """
 show_engine.py
-- VIRAL/ENGAGING PROMPT (Drama, Humor).
-- SAFETY LAYER (Fixes Name vs ID errors).
-- ENFORCES EXTREME LENGTH (100+ lines) by mandating section lengths.
+- FORMAT: 1-on-1 Intimate Interview.
+- TONE: Realistic, Spicy, Emotional.
+- LENGTH: 100+ Lines.
 """
 import json
 import logging
@@ -18,54 +18,43 @@ class ShowEngine:
         self.client = Groq(api_key=config.GROQ_API_KEY)
 
     def generate_script(self, hosts: List[Dict], guests: List[Dict], show_id: str) -> List[Dict[str, Any]]:
-        self.logger.info(f"[{show_id}] Generating LONG VIRAL script...")
+        self.logger.info(f"[{show_id}] Generating INTERVIEW script...")
         
-        host_names = ", ".join([h['name'] for h in hosts])
-        guest_names = ", ".join([g['name'] for g in guests])
+        host = hosts[0]
+        guest = guests[0]
         
         prompt = f"""
-        You are the head writer for a viral Facebook Watch dating show.
-        **GOAL:** Generate a massive, detailed script (8-10 minutes spoken time).
+        You are writing a script for "The Ex-Files," a raw, intimate radio interview show about heartbreak and relationships.
+        
+        **THE HOST:** {host['name']} ({host['gender']}). Empathetic but pries for details. Wants the truth.
+        **THE GUEST:** {guest['name']} ({guest['gender']}). **Scenario:** {guest['persona']}
+        
+        **GOAL:** Create a 10-minute deep dive. Make it feel like a therapy session mixed with a confession.
 
-        **THE CAST:**
-        Hosts: {host_names} (Gossipy, funny, opinionated).
-        Guests: {guest_names} (Just finished a first date).
+        **STRUCTURE (Mandatory 100+ Lines):**
+        1.  **THE WARM UP (10 lines):** Host welcomes guest. "You look tired. Drink some water." Guest is nervous.
+        2.  **THE RELATIONSHIP (30 lines):** How was it at the start? "He was perfect." "She was my soulmate."
+        3.  **THE BETRAYAL (40 lines):** **The Spicy Part.** How did it go wrong? 
+            - Ask about the sex (keep it PG-13 but real). "Was the chemistry gone?"
+            - Ask about the moment they knew it was over.
+            - Ask about the cheating/lying.
+        4.  **THE COMPARISON (20 lines):** "Is the new person better?" Be brutal.
+        5.  **THE FINAL WORD (10 lines):** Do they still love the ex?
 
-        **MANDATORY LENGTH INSTRUCTIONS:**
-        You MUST generate a JSON array containing **AT LEAST 100 OBJECTS (Lines of dialogue)**.
-        Do not summarize. Do not rush. You must write out every single awkward pause and argument.
+        **STYLE:**
+        - Hesitant speech ("I... I don't know").
+        - Interruptions.
+        - Emotional outbursts ("Don't look at me like that!").
+        - **NO "Welcome to the show."** Start with the vibe check.
 
-        **REQUIRED SCENE BREAKDOWN (Follow this exactly to get length):**
-        1.  **THE HOOK (20 Lines):** 
-            - Start mid-conversation about a viral topic or the weather. 
-            - Then tease the date: "Folks, you are not going to believe what happened at Olive Garden tonight."
-        2.  **THE MEET CUTE (20 Lines):** 
-            - How did they meet? (Tinder? A bar?). 
-            - First impressions (Was he shorter than his profile? Did she look like her photos?).
-        3.  **THE DATE DISASTER (40 Lines):** 
-            - **This is the main event.** Go into extreme detail.
-            - What did they eat? (Describe the smell/taste).
-            - What went wrong? (Rude waiter? Ex-girlfriend showed up? Spilled drink?).
-            - Hosts must interrupt constantly with reactions ("NO WAY!", "Stop it!").
-        4.  **THE VERDICT (20 Lines):** 
-            - The debate. Hosts take sides.
-            - The final question: Second Date? Yes or No.
-            - The outro.
-
-        **STYLE GUIDE:**
-        - Make it messy and real. Use slang. Use interruptions.
-        - **NO "Welcome to..." intros.**
-        - **NO cheesy radio voices.** Talk like real people on a podcast.
-
-        **OUTPUT FORMAT:**
-        A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
+        **OUTPUT:** JSON Array of objects {{"speaker_id": int, "text": string}}.
         """
 
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.85, # High creativity/volatility
+                temperature=0.8,
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -79,29 +68,15 @@ class ShowEngine:
             else:
                 script = data
 
-            # --- SAFETY LAYER: Fix Speaker IDs ---
-            name_map = {c['name']: c['id'] for c in hosts + guests}
-            cleaned_script = []
+            # ID Fixer
+            name_map = {host['name']: host['id'], guest['name']: guest['id']}
             for line in script:
-                sid = line.get('speaker_id')
-                # If sid is a Name string, convert to ID
-                if isinstance(sid, str):
-                    if sid in name_map:
-                        line['speaker_id'] = name_map[sid]
-                        cleaned_script.append(line)
-                elif isinstance(sid, int):
-                    cleaned_script.append(line)
-            script = cleaned_script
-            # -------------------------------------
+                if isinstance(line.get('speaker_id'), str):
+                    line['speaker_id'] = name_map.get(line['speaker_id'], host['id'])
 
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
-            
-            # Warn if it's still short (shouldn't happen with this prompt)
-            if len(script) < 80:
-                self.logger.warning(f"Script is shorter than requested ({len(script)} lines).")
-
             return script
 
         except Exception as e:
-            self.logger.critical(f"Script generation failed: {e}")
+            self.logger.critical(f"Script error: {e}")
             raise
