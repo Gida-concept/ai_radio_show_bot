@@ -1,8 +1,9 @@
 """
 show_engine.py
-- VIRAL/ENGAGING PROMPT.
-- ENFORCES EXTREME LENGTH (100+ lines).
-- SAFETY LAYER (Fixes Name vs ID errors).
+- PROMPT: MAX SPICE, TEA, AND DRAMA.
+- STRUCTURE: Tease -> Crime -> Defense -> Verdict.
+- LENGTH: 100+ Lines (Mandatory).
+- SAFETY: ID Fixing.
 """
 import json
 import logging
@@ -18,33 +19,38 @@ class ShowEngine:
         self.client = Groq(api_key=config.GROQ_API_KEY)
 
     def generate_script(self, hosts: List[Dict], guests: List[Dict], show_id: str) -> List[Dict[str, Any]]:
-        self.logger.info(f"[{show_id}] Generating LONG VIRAL script...")
+        self.logger.info(f"[{show_id}] Generating SPICY DRAMA script...")
         
         host_names = ", ".join([h['name'] for h in hosts])
         guest_names = ", ".join([g['name'] for g in guests])
         
         prompt = f"""
-        You are the head writer for a viral Facebook Watch dating show.
-        **GOAL:** Generate a massive, detailed script (8-10 minutes spoken time).
-
+        You are the showrunner for the most chaotic, viral dating show on the internet.
+        **GOAL:** Write a script so spicy and dramatic that it gets 1 million comments.
+        
         **THE CAST:**
-        Hosts: {host_names} (Gossipy, funny, opinionated).
-        Guests: {guest_names} (Just finished a first date).
+        - Hosts ({host_names}): Messy, loud, opinionated. They LIVE for drama.
+        - Guests ({guest_names}): Just had a NIGHTMARE first date.
 
-        **MANDATORY LENGTH INSTRUCTIONS:**
-        You MUST generate a JSON array containing **AT LEAST 100 OBJECTS (Lines of dialogue)**.
-        Do not summarize. Write out every single awkward pause and argument.
+        **MANDATORY "SPICE" INSTRUCTIONS:**
+        1.  **THE TEASE (Lines 1-20):** 
+            - Start mid-argument. The hosts are already shocked.
+            - "I cannot believe he did that." "She is delusional!"
+            - Tease the audience before introducing the guests.
+        2.  **THE CRIME (Lines 21-50):** 
+            - One guest accuses the other of something WILD.
+            - Examples: "He brought his mom," "She texted her ex," "He ordered for me," "She stole the silverware."
+            - **Be specific.** Describe the restaurant, the smell, the awkward silence.
+        3.  **THE DEFENSE (Lines 51-80):** 
+            - The accused guest gets ANGRY and defends themselves.
+            - "You are lying!" "That is NOT what happened!"
+            - The hosts take sides and roast them.
+        4.  **THE VERDICT (Lines 81-100+):** 
+            - The final decision. Second date? 
+            - Usually "Absolutely Not," but make them fight about it.
 
-        **REQUIRED SCENE BREAKDOWN:**
-        1.  **THE HOOK (20 Lines):** Start mid-conversation. High energy. Tease the drama.
-        2.  **THE MEET CUTE (20 Lines):** First impressions. Be specific.
-        3.  **THE DATE DISASTER (40 Lines):** **Main Event.** Sensory details (smells, tastes). rude waiters, spilled drinks.
-        4.  **THE VERDICT (20 Lines):** The debate. The final decision (Yes/No).
-
-        **STYLE GUIDE:**
-        - Make it messy and real. Use slang.
-        - **NO "Welcome to..." intros.**
-        - **NO cheesy radio voices.**
+        **LENGTH RULE:**
+        - **AT LEAST 100 LINES.** Do not rush the drama. Milk every awkward moment.
 
         **OUTPUT FORMAT:**
         A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
@@ -54,7 +60,7 @@ class ShowEngine:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.85, # High creativity
+                temperature=0.9, # Max creativity/chaos
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -68,20 +74,18 @@ class ShowEngine:
             else:
                 script = data
 
-            # --- SAFETY LAYER: Fix Speaker IDs ---
+            # --- SAFETY LAYER ---
             name_map = {c['name']: c['id'] for c in hosts + guests}
             cleaned_script = []
             for line in script:
                 sid = line.get('speaker_id')
-                # If sid is a Name string, convert to ID
-                if isinstance(sid, str):
-                    if sid in name_map:
-                        line['speaker_id'] = name_map[sid]
-                        cleaned_script.append(line)
+                if isinstance(sid, str) and sid in name_map:
+                    line['speaker_id'] = name_map[sid]
+                    cleaned_script.append(line)
                 elif isinstance(sid, int):
                     cleaned_script.append(line)
             script = cleaned_script
-            # -------------------------------------
+            # --------------------
 
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
             return script
