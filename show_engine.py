@@ -251,12 +251,19 @@ No markdown formatting. No explanations. Just valid JSON.
 
 **ABSOLUTE REQUIREMENTS:**
 1. ONLY use speaker_id: {host['id']} for {host['name']}, {guest['id']} for {guest['name']}
-2. 250-300+ lines MINIMUM (8-10 minutes audio)
+2. **MINIMUM 250 LINES OF DIALOGUE - THIS IS NON-NEGOTIABLE**
 3. Every question must be SPECIFIC to "{guest['persona']}"
 4. No generic therapy speak
 5. Natural, reactive conversation flow
 6. Strategic cliffhangers for multi-part engagement
 7. Emotional authenticity over polish
+
+**LINE COUNT VALIDATION:**
+Before you finish, count your dialogue array. If it has fewer than 250 entries, ADD MORE LINES.
+Do NOT submit a script with fewer than 250 lines. The conversation should be 8-10 minutes long.
+If you're at 100 lines and wrapping up, YOU'RE DOING IT WRONG - keep going!
+
+Remember: 250+ lines MINIMUM. Not 50. Not 100. Not even 200. At LEAST 250 lines of back-and-forth dialogue.
 
 ---
 
@@ -279,7 +286,10 @@ GO.
 
         try:
             chat_completion = self.client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "You are a master dialogue writer. You create natural, engaging 250+ line conversations in JSON format."},
+                    {"role": "user", "content": prompt}
+                ],
                 model=config.GROQ_LLM_MODEL,
                 temperature=0.95,  # Even higher for more unique, creative responses
                 max_tokens=8000,
