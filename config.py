@@ -52,7 +52,7 @@ BACKGROUND_VIDEO_URL = "res.cloudinary.com/dv0unfuhw/video/upload/v1767956311/dz
 BACKGROUND_MUSIC_URL = "https://res.cloudinary.com/dv0unfuhw/video/upload/v1767958481/sndhmaxhxvpz1veablza.mp3"
 
 # --- Posting ---
-POSTING_CAPTION_TEMPLATE = "💔 The Ex-Files: {host} sits down with {guest} to talk about heartbreak, betrayal, and moving on. #Dating #Interview #RelationshipAdvice"
+POSTING_CAPTION_TEMPLATE = "💔 The Ex-Files: {host} sits down with {guest} to talk about heartbreak, betrayal, and moving on. #fyp #viralreels #reels #viral #Dating #Interview #RelationshipAdvice"
 
 # --- Logging ---
 LOG_FILE = LOGS_DIR / "ai_radio_bot.log"
@@ -61,3 +61,4 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(module)s - %(message)s"
 
 if not GROQ_API_KEY:
     raise ValueError("CRITICAL: GROQ_API_KEY is not set.")
+
