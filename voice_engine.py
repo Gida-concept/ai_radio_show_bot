@@ -1,8 +1,8 @@
 """
 voice_engine.py
-- 4 DISTINCT VOICES (p226, p225, p237, p236).
-- TEXT-BASED EMOTION: Modifies text to force tone (Shouting, Stuttering, etc).
-- VISIBLE LOGGING.
+- RESTORED TO STABLE GENERATIVE VERSION.
+- 4 DISTINCT VOICES (VCTK Model).
+- LOGS VISIBLE.
 """
 
 import torch
@@ -14,11 +14,11 @@ from pydub import AudioSegment
 import config
 from character_manager import CharacterManager
 
-# --- VOICE MAPPING (The Working 4-Voice Set) ---
+# --- VOICE MAPPING (Generative VCTK) ---
 # p226: Deep Male (Host Jack)
 # p225: Clear Female (Host Olivia)
 # p237: Distinct Male (Guest Ryan/Leo)
-# p236: High-Pitch Female (Guest Mia/Chloe)
+# p236: Distinct Female (Guest Mia/Chloe)
 VOICE_MODEL_MAP = {
     # HOSTS
     "vits_male_01":   {"speaker": "p226"},
@@ -37,6 +37,7 @@ class VoiceEngine:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.logger.info(f"TTS will use device: {self.device.upper()}")
         
+        # Load VCTK Model (Generative)
         self.logger.info("Initializing Coqui TTS model (vctk/vits)...")
         try:
             self.tts = TTS("tts_models/en/vctk/vits").to(self.device)
@@ -45,42 +46,8 @@ class VoiceEngine:
             self.logger.critical(f"CRITICAL: Failed to load TTS model. Error: {e}")
             raise RuntimeError("Could not load required TTS model.") from e
 
-    def _emotionalize_text(self, text: str, emotion: str) -> str:
-        """
-        Rewrites text to force VITS to change tone/rhythm.
-        """
-        if not emotion:
-            return text
-        e = emotion.lower()
-        
-        # 1. ANGER / SHOUTING (Caps + Staccato)
-        if any(x in e for x in ["angr", "yell", "shout", "furious", "mad"]):
-            return text.upper().replace(" ", ". ") + "!"
-
-        # 2. SHOCK / SURPRISE (Interrobangs)
-        if any(x in e for x in ["shock", "surpris", "disbelief", "no way"]):
-            return text.replace("?", "?!").replace("!", "?!") + "?!"
-
-        # 3. NERVOUS / AWKWARD (Stuttering/Pauses)
-        if any(x in e for x in ["nervous", "awkward", "hesitant", "shy"]):
-            words = text.split()
-            if len(words) > 3:
-                mid = len(words) // 2
-                words.insert(mid, "...um...")
-            return "Um... " + " ".join(words) + "..."
-
-        # 4. LAUGHING / EXCITED (Phonetics)
-        if any(x in e for x in ["excit", "happy", "laugh", "funny"]):
-            return text + "! Ha! Ha!"
-
-        # 5. SARCASM (Quotes)
-        if any(x in e for x in ["sarcas", "sassy"]):
-            return f'"{text}"... really?'
-
-        return text
-
     def generate_show_audio(self, script: List[Dict[str, Any]], show_id: str) -> Tuple[str, List[Dict[str, Any]]]:
-        self.logger.info(f"[{show_id}] Generating EMOTIONAL audio for {len(script)} lines...")
+        self.logger.info(f"[{show_id}] Generating audio for {len(script)} lines...")
         
         show_audio_dir = config.AUDIO_DIR / show_id
         show_audio_dir.mkdir(parents=True, exist_ok=True)
@@ -90,44 +57,35 @@ class VoiceEngine:
 
         for i, line in enumerate(script):
             speaker_id = line["speaker_id"]
-            original_text = line["text"]
-            emotion = line.get("emotion", "")
-            
+            text = line["text"]
             line_filename = show_audio_dir / f"line_{i:03d}_{speaker_id}.wav"
 
             try:
-                # 1. Resolve Speaker
+                # 1. Look up character
                 character = self.character_manager.get_character_by_id(speaker_id)
                 voice_key = character["voice"]
                 
+                # 2. Determine Speaker
                 if voice_key in VOICE_MODEL_MAP:
                     speaker = VOICE_MODEL_MAP[voice_key]["speaker"]
                 else:
+                    # Fallback (Gender Safe)
                     speaker = "p226" if character['gender'] == 'male' else "p225"
-                    self.logger.warning(f"Voice key {voice_key} not found. Fallback to {speaker}.")
+                    self.logger.warning(f"Voice key '{voice_key}' not found. Fallback to {speaker}.")
 
-                # 2. APPLY TONE (Emotionalize)
-                final_text = self._emotionalize_text(original_text, emotion)
-
-                # Log it so you can see the tone change
-                self.logger.info(f"Line {i+1}: {character['name']} ({emotion}) -> {speaker}")
-                if final_text != original_text:
-                    self.logger.info(f"   Tone Mod: {final_text}")
+                # VISIBLE LOGGING
+                self.logger.info(f"Line {i+1}: {character['name']} ({character['gender']}) -> Speaker {speaker}")
 
                 # 3. Generate
-                self.tts.tts_to_file(text=final_text, speaker=speaker, file_path=str(line_filename))
+                self.tts.tts_to_file(
+                    text=text,
+                    speaker=speaker,
+                    file_path=str(line_filename)
+                )
 
-                # 4. Combine
                 segment = AudioSegment.from_wav(line_filename)
                 combined_audio += segment
-
-                # Save ORIGINAL text for subtitles (so captions are easy to read)
-                line_audio_metadata.append({
-                    "path": str(line_filename),
-                    "duration_ms": len(segment),
-                    "speaker_id": speaker_id,
-                    "text": original_text, 
-                })
+                line_audio_metadata.append({"path": str(line_filename), "duration": len(segment)})
 
             except Exception as e:
                 self.logger.error(f"Error on line {i}: {e}")
