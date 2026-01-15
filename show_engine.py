@@ -1,8 +1,8 @@
 """
 show_engine.py
-- VIRAL/ENGAGING PROMPT.
-- ENFORCES EXTREME LENGTH (100+ lines).
-- ENFORCES EMOTIONAL TAGGING (Anger, Shock, Laughter) to trigger Voice Engine.
+- PROMPT: HIGH-OCTANE DRAMA, ROASTING, AND SHOCK VALUE.
+- LENGTH: 100+ LINES (8-10 Mins).
+- SAFETY: ID Fixing included.
 """
 import json
 import logging
@@ -18,43 +18,32 @@ class ShowEngine:
         self.client = Groq(api_key=config.GROQ_API_KEY)
 
     def generate_script(self, hosts: List[Dict], guests: List[Dict], show_id: str) -> List[Dict[str, Any]]:
-        self.logger.info(f"[{show_id}] Generating LONG VIRAL script with EMOTIONS...")
+        self.logger.info(f"[{show_id}] Generating HIGH-OCTANE DRAMA script...")
         
         host_names = ", ".join([h['name'] for h in hosts])
         guest_names = ", ".join([g['name'] for g in guests])
         
         prompt = f"""
-        You are the head writer for a viral Facebook Watch dating show.
-        **GOAL:** Generate a massive, detailed script (8-10 minutes spoken time) full of DRAMA and EMOTION.
-
+        You are the showrunner for the most chaotic, viral dating show on the internet.
+        **GOAL:** Write a script so spicy and dramatic that it gets 1 million comments.
+        
         **THE CAST:**
-        Hosts: {host_names} (Gossipy, funny, opinionated).
-        Guests: {guest_names} (Just finished a first date).
+        - Hosts ({host_names}): They are NOT polite. They roast the guests. They gasp loudly. They dig for drama.
+        - Guests ({guest_names}): They just had a DISASTROUS or WILD first date.
 
-        **CRITICAL EMOTION INSTRUCTIONS:**
-        You MUST use the "emotion" key to direct the voice acting. Do not use "neutral" often.
-        Use these specific keywords to trigger special voice effects:
-        1.  **"shouting" / "angry"**: For arguments. (e.g., "YOU DID WHAT?!")
-        2.  **"nervous" / "awkward"**: For embarrassing admissions. (e.g., "I... um... forgot my wallet.")
-        3.  **"shocked" / "disbelief"**: When hearing crazy details. (e.g., "NO. WAY.")
-        4.  **"laughing" / "excited"**: For funny moments.
-        5.  **"whisper" / "sarcastic"**: For shade and secrets.
+        **CRITICAL RULES FOR EXCITEMENT:**
+        1.  **NO BORING SMALL TALK.** Do not ask "How are you?" Start with a bang.
+        2.  **THE "TEA":** The date cannot be normal. 
+            - *Examples:* He brought a puppet? She ate off his plate without asking? He forgot his wallet? She texted her ex?
+        3.  **ROASTING:** If a guest did something dumb, the hosts must call them out. "Girl, you did WHAT?!"
+        4.  **ARGUMENTS:** The guests should disagree about what happened. "That is NOT how it happened!"
+        5.  **LENGTH:** **100+ LINES**. Keep the drama going. Do not solve it quickly.
 
-        **MANDATORY LENGTH INSTRUCTIONS:**
-        You MUST generate a JSON array containing **AT LEAST 100 OBJECTS (Lines of dialogue)**.
-        Do not summarize. Write out every single awkward pause and argument.
-
-        **REQUIRED SCENE BREAKDOWN:**
-        1.  **THE HOOK (20 Lines):** Start mid-conversation. High energy. Tease the drama.
-        2.  **THE MEET CUTE (20 Lines):** First impressions. Be specific (e.g., "He looked shorter than his bio").
-        3.  **THE DATE DISASTER (40 Lines):** **Main Event.** Sensory details (smells, tastes). rude waiters, spilled drinks, ex-lovers appearing.
-            - *Requirement:* At least one person must get **"angry"** or **"shocked"** here.
-        4.  **THE VERDICT (20 Lines):** The debate. The final decision.
-
-        **STYLE GUIDE:**
-        - Make it messy and real. Use slang.
-        - **NO "Welcome to..." intros.**
-        - **NO cheesy radio voices.**
+        **SCENE BREAKDOWN:**
+        1.  **THE TEASE (20 lines):** Hosts are already laughing/screaming about the date before guests speak.
+        2.  **THE CRIME (30 lines):** The specific crazy thing that happened. Extreme detail.
+        3.  **THE DEFENSE (30 lines):** The other guest tries to justify their crazy behavior.
+        4.  **THE VERDICT (20 lines):** The final decision. Second date? Usually NO, but make it dramatic.
 
         **OUTPUT FORMAT:**
         A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
@@ -64,7 +53,7 @@ class ShowEngine:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.85, # High creativity
+                temperature=0.9, # Max creativity/chaos
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -78,25 +67,20 @@ class ShowEngine:
             else:
                 script = data
 
-            # --- SAFETY LAYER: Fix Speaker IDs ---
+            # --- SAFETY LAYER ---
             name_map = {c['name']: c['id'] for c in hosts + guests}
             cleaned_script = []
             for line in script:
                 sid = line.get('speaker_id')
-                if isinstance(sid, str):
-                    if sid in name_map:
-                        line['speaker_id'] = name_map[sid]
-                        cleaned_script.append(line)
+                if isinstance(sid, str) and sid in name_map:
+                    line['speaker_id'] = name_map[sid]
+                    cleaned_script.append(line)
                 elif isinstance(sid, int):
                     cleaned_script.append(line)
             script = cleaned_script
-            # -------------------------------------
+            # --------------------
 
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
-            
-            if len(script) < 80:
-                self.logger.warning(f"Script is shorter than requested ({len(script)} lines).")
-
             return script
 
         except Exception as e:
