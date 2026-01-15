@@ -1,7 +1,6 @@
 """
 config.py
-
-Centralized configuration for the AI Radio Show Bot.
+Configuration for the 1-on-1 Interview Format.
 """
 
 import os
@@ -32,46 +31,28 @@ FACEBOOK_PAGE_ID = os.getenv("FACEBOOK_PAGE_ID")
 FACEBOOK_ACCESS_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN")
 
 # --- Scheduling ---
-# 3 hours + 10 minutes = 11400 seconds
-SHOW_INTERVAL_SECONDS = 11400
+SHOW_INTERVAL_SECONDS = 11400 # 3h 10m
+POSTING_INTERVAL_SECONDS = 600 # 10m
 
-# Post every 10 minutes
-POSTING_INTERVAL_SECONDS = 600
-
-# --- Show Generation Settings ---
-# STRICT LENGTH REQUIREMENTS
-MIN_SHOW_DURATION_MINUTES = 8
-MAX_SHOW_DURATION_MINUTES = 12
-
-# Character setup
-NUM_HOSTS = 2
-NUM_GUESTS = 2
+# --- Show Settings (1 vs 1) ---
+NUM_HOSTS = 1
+NUM_GUESTS = 1
 CHARACTERS_JSON_PATH = DATA_DIR / "characters.json"
 
 # --- Media Generation ---
-# Split video into 2.5 minute parts (150 seconds)
+# Target part length: 2.5 minutes
 PART_DURATION_SECONDS = 150
 
 # --- Groq Configuration ---
-# USING THE LATEST MODEL
 GROQ_LLM_MODEL = "llama-3.3-70b-versatile"
 GROQ_WHISPER_MODEL = "whisper-large-v3"
 
-# --- Voice Engine ---
-# These keys map to the strict gender enforcement in voice_engine.py
-AVAILABLE_VOICES = [
-    "vits_male_01",
-    "vits_female_01",
-    "vits_male_02",
-    "vits_female_02",
-]
-
-# --- Video Engine ---
-BACKGROUND_VIDEO_URL = "https://res.cloudinary.com/dv0unfuhw/video/upload/v1767956316/qg35pfueznxeene9xmhi.mp4"
+# --- Media Assets ---
+BACKGROUND_VIDEO_URL = "res.cloudinary.com/dv0unfuhw/video/upload/v1767956311/dzvb8fvjditgqce3azbz.mp4"
 BACKGROUND_MUSIC_URL = "https://res.cloudinary.com/dv0unfuhw/video/upload/v1767958481/sndhmaxhxvpz1veablza.mp3"
 
-# --- Posting Engine ---
-POSTING_CAPTION_TEMPLATE = "Date Update! 💘 Will {guest1} and {guest2} find love? Our hosts {host1} and {host2} get all the details. #AIRadio #DatingShow #AI"
+# --- Posting ---
+POSTING_CAPTION_TEMPLATE = "💔 The Ex-Files: {host} sits down with {guest} to talk about heartbreak, betrayal, and moving on. #Dating #Interview #RelationshipAdvice"
 
 # --- Logging ---
 LOG_FILE = LOGS_DIR / "ai_radio_bot.log"
