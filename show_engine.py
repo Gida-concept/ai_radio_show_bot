@@ -71,16 +71,16 @@ If the story is "He's still in love with his high school sweetheart who is marri
 
 ---
 
-**CONVERSATION STRUCTURE (250-300+ LINES):**
+**CONVERSATION STRUCTURE (400-800+ LINES):**
 
-**ACT 1: SETTLING IN (30-40 lines)**
+**ACT 1: SETTLING IN (30-50 lines)**
 - Natural greeting, notice their energy
 - Small talk that reveals personality
 - Ease into the topic naturally
 - Let them decide when to start the real story
 - No "welcome to the show" - start human
 
-**ACT 2: THE SETUP (50-70 lines)**
+**ACT 2: THE SETUP (50-90 lines)**
 - How did this situation even START?
 - Specific details about how they met this person
 - What was their life like before this happened?
@@ -88,7 +88,7 @@ If the story is "He's still in love with his high school sweetheart who is marri
 - Build the world so we understand the context
 - Let {guest['name']} paint the picture their way
 
-**ACT 3: THE STORY UNFOLDS (80-100 lines)**
+**ACT 3: THE STORY UNFOLDS (90-150 lines)**
 This is the MEAT. Dig into the specifics of THEIR unique situation.
 
 Ask questions ONLY this story would have:
@@ -105,7 +105,7 @@ React authentically:
 - "That's insane."
 - Let the conversation flow based on what they reveal
 
-**ACT 4: THE AFTERMATH (60-80 lines)**
+**ACT 4: THE AFTERMATH (80-120 lines)**
 What happened next? This varies HUGELY by story type.
 
 For betrayal stories:
@@ -129,7 +129,7 @@ For modern dating disasters:
 - What did their friends say?
 - Are they still on the apps?
 
-**ACT 5: WHERE THEY ARE NOW (40-60 lines)**
+**ACT 5: WHERE THEY ARE NOW (70-100 lines)**
 Current reality. No neat bows.
 
 - What's their life like today?
@@ -138,7 +138,7 @@ Current reality. No neat bows.
 - Would they do anything differently?
 - What do they want people to know?
 
-**ACT 6: THE CLOSE (20-30 lines)**
+**ACT 6: THE CLOSE (40-60 lines)**
 - Final thoughts from {guest['name']}
 - {host['name']} validates their experience
 - Turn to audience with authentic CTA
@@ -358,3 +358,4 @@ GO.
         except Exception as e:
             self.logger.critical(f"Script generation error: {e}")
             raise
+
