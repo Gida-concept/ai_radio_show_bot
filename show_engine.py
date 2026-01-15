@@ -1,6 +1,7 @@
 """
 show_engine.py
-Forces long scripts + Human-like, untitled intro.
+Logic: Unchanged.
+Prompt: OPTIMIZED FOR FACEBOOK ENGAGEMENT (Drama, Humor, Awkwardness, Realism).
 """
 import json
 import logging
@@ -16,41 +17,53 @@ class ShowEngine:
         self.client = Groq(api_key=config.GROQ_API_KEY)
 
     def generate_script(self, hosts: List[Dict], guests: List[Dict], show_id: str) -> List[Dict[str, Any]]:
-        self.logger.info(f"[{show_id}] Generating LONG, NATURAL script...")
+        self.logger.info(f"[{show_id}] Generating VIRAL/ENGAGING script...")
         
         host_names = ", ".join([h['name'] for h in hosts])
         guest_names = ", ".join([g['name'] for g in guests])
         
         prompt = f"""
-        Write a radio dating show script.
-        Hosts: {host_names}
+        You are the head writer for a viral, high-energy dating show that airs on Facebook Watch.
+        **Goal:** Create a script so funny, awkward, and engaging that people CANNOT stop listening.
+
+        **THE CAST:**
+        Hosts: {host_names} (They are messy, opinionated, and love gossip).
         Guests: {guest_names} (Just finished a first date).
 
-        **CRITICAL INSTRUCTION 1: NO CHEESY TITLES**
-        - Do NOT say "Welcome to AI Love Connections".
-        - Do NOT name the show.
-        - Start **immediately** with casual, human banter between the hosts (e.g., talking about the weather, the city, the vibe of the night, or a viral topic).
-        - Make it feel like the listener just tuned into a real conversation.
+        **CRITICAL INSTRUCTIONS FOR "FACEBOOK ENGAGEMENT":**
+        1.  **NO ROBOTIC INTROS:** Start mid-conversation. Start with energy. "Okay, stop, stop. You said he wore WHAT?"
+        2.  **CREATE TENSION:** We need disagreements. 
+            - Example: "Wait, you split the bill on a first date? In 2024??" 
+            - Example: "He talked about his crypto portfolio for 20 minutes?"
+        3.  **MAKE IT AWKWARD:** Include moments where one guest says something cringe, and the others react (silence, nervous laughter).
+        4.  **SENSORY DETAILS:** Don't say "The food was bad." Say "The sushi smelled like wet socks and the rice was crunchy."
+        5.  **HOSTS MUST REACT:** The hosts are the audience surrogates. They should gasp, laugh loud, take sides, and "stir the pot."
 
-        **CRITICAL INSTRUCTION 2: LENGTH**
-        You MUST generate a script of **AT LEAST 80 to 100 LINES**.
+        **LENGTH REQUIREMENT:**
+        - **80 to 120 LINES.** (Approx 8-10 minutes).
+        - Do not rush. Milk the drama.
 
-        **STRUCTURE:**
-        1. **The Vibe Check (15 lines):** Hosts chatting casually. "Jack, have you been outside? It's pouring." "I know, Olivia, crazy night." Then they bring in the guests.
-        2. **The Meet (20 lines):** How the guests met.
-        3. **The Date (30 lines):** DETAILED discussion of the restaurant, food, and awkward moments.
-        4. **The Verdict (15 lines):** Second date? Yes/No.
-        5. **Outro (10 lines):** A cool sign-off. "Stay warm out there, Seattle."
+        **SCRIPT STRUCTURE:**
+        1.  **The Hook (Min 0-1):** Hosts teasing the audience. "We have a wild one tonight folks."
+        2.  **The Backstory (Min 1-3):** How they met. Was it a catfish situation? A drunk DM?
+        3.  **The Date Disaster/Triumph (Min 3-6):** Specifics. The waiter was rude. The ex-girlfriend showed up. The food was inedible. 
+        4.  **The "Hot Take" Debate (Min 6-7):** Hosts and guests argue about a dating rule (e.g., splitting the bill, kissing on first date). **This drives comments.**
+        5.  **The Verdict (Min 7-8+):** High suspense. Will they go out again?
+            - If NO: The rejection must be brutal but funny.
+            - If YES: It must be cute and specific.
 
         **OUTPUT FORMAT:**
-        A single JSON array of objects. Keys: "speaker_id" (int), "text" (string), "scene" (string), "emotion" (string).
+        A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
+        Use "emotion" to guide the voice (e.g., "shocked", "wheezing laughter", "defensive", "flirty").
+
+        WRITE THE SCRIPT NOW. MAKE IT SPICY.
         """
 
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.75, # Slightly higher for more natural flair
+                temperature=0.8, # High temp for maximum personality
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
