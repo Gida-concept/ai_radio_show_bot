@@ -1,0 +1,13 @@
+# AI & ML
+groq
+torch
+torchaudio
+TTS
+# Media Processing
+ffmpeg-python
+pydub
+requests
+# Scheduling & Utilities
+schedule
+python-dotenv
+pathlib

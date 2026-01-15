@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Jack",
+    "gender": "male",
+    "voice": "vits_male_01",
+    "persona": "The witty, charming host who loves a good pun."
+  },
+  {
+    "id": 2,
+    "name": "Olivia",
+    "gender": "female",
+    "voice": "vits_female_01",
+    "persona": "The empathetic, sharp host who keeps the conversation grounded and insightful."
+  },
+  {
+    "id": 3,
+    "name": "Ryan",
+    "gender": "male",
+    "voice": "vits_male_02",
+    "persona": "A laid-back, adventurous software engineer who enjoys hiking and trying new restaurants."
+  },
+  {
+    "id": 4,
+    "name": "Mia",
+    "gender": "female",
+    "voice": "vits_female_02",
+    "persona": "A bubbly and creative graphic designer with a passion for art and travel."
+  },
+  {
+    "id": 5,
+    "name": "Leo",
+    "gender": "male",
+    "voice": "vits_male_01",
+    "persona": "A confident and ambitious lawyer who knows what he wants."
+  },
+  {
+    "id": 6,
+    "name": "Chloe",
+    "gender": "female",
+    "voice": "vits_female_01",
+    "persona": "A shy but sweet librarian who loves classic movies and cozy cafes."
+  }
+]
