@@ -1,6 +1,6 @@
 """
 voice_engine.py
-STRICT GENDER ENFORCEMENT.
+4 DISTINCT VOICES (2 MALE, 2 FEMALE).
 """
 import torch
 import logging
@@ -10,17 +10,16 @@ from pydub import AudioSegment
 import config
 from character_manager import CharacterManager
 
-# --- STRICT VOICE MAPPING ---
-# We force ALL males to 'p226' and ALL females to 'p225'.
-# There is no chance of error with this map.
+# --- VOICE MAPPING ---
+# Hosts use the voices you liked. Guests use NEW, distinct voices.
 VOICE_MODEL_MAP = {
-    # MALE VOICES
-    "vits_male_01":   {"model_name": "tts_models/en/vctk/vits", "speaker": "p226"},
-    "vits_male_02":   {"model_name": "tts_models/en/vctk/vits", "speaker": "p226"},
+    # HOSTS
+    "vits_male_01":   {"speaker": "p226"}, # Jack (Deep Male - Original)
+    "vits_female_01": {"speaker": "p225"}, # Olivia (Clear Female - Original)
     
-    # FEMALE VOICES
-    "vits_female_01": {"model_name": "tts_models/en/vctk/vits", "speaker": "p225"},
-    "vits_female_02": {"model_name": "tts_models/en/vctk/vits", "speaker": "p225"},
+    # GUESTS (New Voices)
+    "vits_male_02":   {"speaker": "p232"}, # Ryan/Leo (Distinct Masculine)
+    "vits_female_02": {"speaker": "p228"}, # Mia/Chloe (Distinct Feminine)
 }
 
 class VoiceEngine:
@@ -30,7 +29,7 @@ class VoiceEngine:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.logger.info(f"TTS Device: {self.device}")
         
-        # Load the VITS model once
+        # Load the VCTK Model
         self.logger.info("Loading VCTK VITS Model...")
         self.tts = TTS("tts_models/en/vctk/vits").to(self.device)
         self.logger.info("Model Loaded.")
@@ -40,8 +39,8 @@ class VoiceEngine:
         show_audio_dir = config.AUDIO_DIR / show_id
         show_audio_dir.mkdir(parents=True, exist_ok=True)
         
-        line_audio_metadata = []
         combined_audio = AudioSegment.silent(duration=0)
+        line_audio_metadata = []
 
         for i, line in enumerate(script):
             speaker_id = line["speaker_id"]
@@ -49,17 +48,21 @@ class VoiceEngine:
             line_filename = show_audio_dir / f"line_{i:03d}_{speaker_id}.wav"
 
             try:
+                # 1. Get Character
                 char = self.character_manager.get_character_by_id(speaker_id)
-                voice_key = char["voice"]
+                voice_key = char["voice"] # e.g., "vits_male_02"
                 
-                # FORCE GENDER CHECK
-                if char['gender'] == 'male':
-                    speaker = 'p226' # Always Male
+                # 2. Get Speaker ID from Map
+                if voice_key in VOICE_MODEL_MAP:
+                    speaker = VOICE_MODEL_MAP[voice_key]["speaker"]
                 else:
-                    speaker = 'p225' # Always Female
-                
-                self.logger.info(f"Line {i}: {char['name']} ({char['gender']}) -> Speaker {speaker}")
+                    # Fallback if config is wrong, but maintain gender
+                    speaker = "p226" if char['gender'] == 'male' else "p225"
+                    self.logger.warning(f"Voice key {voice_key} not found. Fallback to {speaker}")
 
+                self.logger.debug(f"Line {i}: {char['name']} -> {speaker}")
+
+                # 3. Generate
                 self.tts.tts_to_file(text=text, speaker=speaker, file_path=str(line_filename))
 
                 segment = AudioSegment.from_wav(line_filename)
