@@ -1,7 +1,8 @@
 """
 show_engine.py
-Logic: Unchanged.
-Prompt: OPTIMIZED FOR FACEBOOK ENGAGEMENT (Drama, Humor, Awkwardness, Realism).
+- VIRAL/ENGAGING PROMPT (Drama, Humor).
+- SAFETY LAYER: Automatically fixes Name vs ID errors.
+- ENFORCES LENGTH (80+ lines).
 """
 import json
 import logging
@@ -23,47 +24,35 @@ class ShowEngine:
         guest_names = ", ".join([g['name'] for g in guests])
         
         prompt = f"""
-        You are the head writer for a viral, high-energy dating show that airs on Facebook Watch.
-        **Goal:** Create a script so funny, awkward, and engaging that people CANNOT stop listening.
+        You are the head writer for a viral, high-energy dating show on Facebook Watch.
+        **Goal:** Create a script so funny, awkward, and engaging that listeners comment immediately.
 
         **THE CAST:**
-        Hosts: {host_names} (They are messy, opinionated, and love gossip).
+        Hosts: {host_names} (Messy, opinionated, love gossip).
         Guests: {guest_names} (Just finished a first date).
 
-        **CRITICAL INSTRUCTIONS FOR "FACEBOOK ENGAGEMENT":**
-        1.  **NO ROBOTIC INTROS:** Start mid-conversation. Start with energy. "Okay, stop, stop. You said he wore WHAT?"
-        2.  **CREATE TENSION:** We need disagreements. 
-            - Example: "Wait, you split the bill on a first date? In 2024??" 
-            - Example: "He talked about his crypto portfolio for 20 minutes?"
-        3.  **MAKE IT AWKWARD:** Include moments where one guest says something cringe, and the others react (silence, nervous laughter).
-        4.  **SENSORY DETAILS:** Don't say "The food was bad." Say "The sushi smelled like wet socks and the rice was crunchy."
-        5.  **HOSTS MUST REACT:** The hosts are the audience surrogates. They should gasp, laugh loud, take sides, and "stir the pot."
+        **INSTRUCTIONS:**
+        1.  **START HOT:** No "Welcome to...". Start mid-argument or mid-laugh.
+        2.  **CREATE TENSION:** Disagreements about who paid, rude waiters, or awkward silences.
+        3.  **SENSORY DETAILS:** "The sushi smelled like wet socks."
+        4.  **LENGTH:** **80 to 100 LINES**. Do not summarize. Write every dialogue line.
 
-        **LENGTH REQUIREMENT:**
-        - **80 to 120 LINES.** (Approx 8-10 minutes).
-        - Do not rush. Milk the drama.
-
-        **SCRIPT STRUCTURE:**
-        1.  **The Hook (Min 0-1):** Hosts teasing the audience. "We have a wild one tonight folks."
-        2.  **The Backstory (Min 1-3):** How they met. Was it a catfish situation? A drunk DM?
-        3.  **The Date Disaster/Triumph (Min 3-6):** Specifics. The waiter was rude. The ex-girlfriend showed up. The food was inedible. 
-        4.  **The "Hot Take" Debate (Min 6-7):** Hosts and guests argue about a dating rule (e.g., splitting the bill, kissing on first date). **This drives comments.**
-        5.  **The Verdict (Min 7-8+):** High suspense. Will they go out again?
-            - If NO: The rejection must be brutal but funny.
-            - If YES: It must be cute and specific.
+        **STRUCTURE:**
+        1.  **The Hook (Min 0-1):** Hosts teasing the audience/guests.
+        2.  **The Backstory (Min 1-3):** How they met (Tinder nightmare?).
+        3.  **The Date (Min 3-6):** The disaster details.
+        4.  **The Debate (Min 6-7):** Hosts take sides. "Jack, you can't say that!"
+        5.  **The Verdict (Min 7+):** Second date? Yes/No.
 
         **OUTPUT FORMAT:**
         A single JSON array. Keys: "speaker_id", "text", "scene", "emotion".
-        Use "emotion" to guide the voice (e.g., "shocked", "wheezing laughter", "defensive", "flirty").
-
-        WRITE THE SCRIPT NOW. MAKE IT SPICY.
         """
 
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.8, # High temp for maximum personality
+                temperature=0.8,
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -76,6 +65,28 @@ class ShowEngine:
                 script = data[key]
             else:
                 script = data
+
+            # --- SAFETY LAYER: Fix Speaker IDs ---
+            # If the AI put "Jack" instead of ID 1, we fix it here.
+            name_map = {c['name']: c['id'] for c in hosts + guests}
+            
+            cleaned_script = []
+            for line in script:
+                sid = line.get('speaker_id')
+                
+                # If sid is a Name string, convert to ID
+                if isinstance(sid, str):
+                    if sid in name_map:
+                        line['speaker_id'] = name_map[sid]
+                        cleaned_script.append(line)
+                    else:
+                        self.logger.warning(f"Skipping line with unknown speaker name: {sid}")
+                # If sid is already an Int, keep it
+                elif isinstance(sid, int):
+                    cleaned_script.append(line)
+            
+            script = cleaned_script
+            # -------------------------------------
 
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
             return script
