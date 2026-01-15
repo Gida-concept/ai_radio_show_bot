@@ -1,9 +1,9 @@
 """
 show_engine.py
-- FORMAT: 1-on-1 Intimate Conversation (NOT interview-style).
-- TONE: Natural, Progressive, Human, Real.
-- LENGTH: EXTENDED (130+ Lines).
-- FLOW: Organic progression from small talk to deep vulnerability.
+- FORMAT: Adaptive 1-on-1 Conversation (Changes based on each story).
+- TONE: Natural, Reactive, Unique to each guest's experience.
+- LENGTH: 250-300+ Lines (8-10 minutes).
+- APPROACH: Story-first, not template-first.
 """
 import json
 import logging
@@ -25,226 +25,259 @@ class ShowEngine:
         guest = guests[0]
         
         prompt = f"""
-You are writing a deeply HUMAN conversation for "The Ex-Files" - a show where two people just... talk. Really talk.
+You are writing a raw, unrehearsed conversation for "The Ex-Files."
 
-**THE PEOPLE IN THIS ROOM:**
-{host['name']} ({host['gender']}) - Speaker ID: {host['id']} - The host. Warm, empathetic, knows when to push and when to just listen.
-{guest['name']} ({guest['gender']}) - Speaker ID: {guest['id']} - Today's guest. Dealing with: "{guest['persona']}"
+**WHO'S IN THE ROOM:**
+{host['name']} ({host['gender']}) - Speaker ID: {host['id']} - The host. Empathetic but curious. Knows when to dig deeper.
+{guest['name']} ({guest['gender']}) - Speaker ID: {guest['id']} - Today's story: "{guest['persona']}"
 
-**CRITICAL: This is NOT a formal interview. This is two humans connecting.**
+**YOUR MISSION:**
+Create a conversation that is COMPLETELY UNIQUE to {guest['name']}'s specific situation. 
 
-Think of it like this: {guest['name']} agreed to come on the show because they need to talk. {host['name']} creates a safe space where the truth can come out naturally, not forced.
+❌ **DO NOT USE GENERIC QUESTIONS LIKE:**
+- "How did that make you feel?"
+- "Tell me about your relationship."
+- "When did things change?"
+- "What would you say to them now?"
 
-**THE CONVERSATION SHOULD FLOW LIKE THIS (130-150 lines):**
+✅ **INSTEAD, ASK QUESTIONS THAT ARE SPECIFIC TO THIS EXACT STORY:**
 
-**PHASE 1: THE WARM-UP (15-20 lines)**
-They're settling in. {guest['name']} is nervous, maybe second-guessing this whole thing.
+**FOR EXAMPLE:**
 
-- {host['name']} notices body language: "You okay? You seem... tense."
-- Small talk that reveals character: "Did you have trouble finding the place?" / "Want some water? Coffee?"
-- {guest['name']} deflects at first: "I'm fine, yeah, let's just... let's do this."
-- {host['name']} doesn't push yet: "No rush. We've got time. Just breathe."
-- Maybe a small joke to break tension, a shared laugh
-- Gradually easing into: "So... you ready to talk about it?"
-- {guest['name']}: "I don't know. Maybe. I think I need to."
+If the story is "Found out he was married the whole 2 years they dated":
+- "Wait, so you met his 'roommate' who was actually his WIFE?"
+- "Did you ever wonder why you never went to his place?"
+- "When you found the wedding ring, what went through your head?"
+- "His wife didn't know about you either, right? Did you two ever talk?"
 
-**PHASE 2: THE OPENING UP (25-30 lines)**
-{guest['name']} starts sharing, but still guarded. Testing the waters.
+If the story is "She caught him on Tinder while they were on their honeymoon":
+- "Honeymoon. HONEYMOON. Where were you when you saw his profile?"
+- "Did he use a photo from the wedding?"
+- "What did his bio say? Was he pretending to be single?"
+- "Did you swipe right just to match with him and call him out?"
 
-- Starts with the "safe" parts: "We were together for [X] years."
-- Talks about how they met: specific details, real memories
-- {host['name']} relates: "I remember that feeling. When everything just... clicks."
-- {guest['name']} gets a little nostalgic: describes a perfect moment
-- {host['name']} asks gentle questions: "What did you love most about them?"
-- {guest['name']} opens up more: real traits, quirks, inside jokes
-- But then catches themselves: "I don't know why I'm telling you this."
-- {host['name']}: "Because it mattered. It's okay that it mattered."
-- Small pause. {guest['name']} nods, continues.
+If the story is "He's still in love with his high school sweetheart who is married":
+- "Does your current partner know you're still thinking about her?"
+- "Do you follow her on social media? See her kids, her life?"
+- "Have you ever reached out? Or thought about it?"
+- "What would you do if she got divorced tomorrow?"
 
-**PHASE 3: THE SHIFT (20-25 lines)**
-The mood changes. Something isn't being said.
-
-- {host['name']} notices the shift: "You just... your whole face changed. What are you thinking about?"
-- {guest['name']} deflects: "Nothing. I mean... it's stupid."
-- {host['name']}: "It's not stupid if it's bothering you."
-- {guest['name']} admits something small: a red flag they ignored
-- {host['name']} doesn't judge: "Did you know then? Or did you convince yourself...?"
-- {guest['name']}: "I convinced myself. For months."
-- They go back and forth, {guest['name']} revealing more with each exchange
-- {host['name']} shares their own experience briefly (relatable, builds trust)
-- {guest['name']} realizes they're not alone: "Wait, you too?"
-- Connection deepens. The walls are coming down.
-
-**PHASE 4: THE HEART OF IT (40-50 lines)**
-This is where the real story comes out. Not rushed. Natural progression.
-
-- {guest['name']} starts to tell what happened, but it's messy
-- They backtrack: "Wait, I should explain first—"
-- {host['name']}: "Take your time. I'm not going anywhere."
-- {guest['name']} describes the moment things changed: 
-  * A specific day, a specific feeling
-  * Something they saw, heard, or realized
-  * The exact moment their gut told them something was wrong
-  
-- {host['name']} asks clarifying questions (not interrogating, just understanding):
-  * "What did you do when you realized?"
-  * "Did you confront them right away?"
-  * "What did they say?"
-  
-- {guest['name']}'s emotions start showing:
-  * Voice gets shaky
-  * Pauses get longer
-  * Maybe anger breaks through: "I was so STUPID."
-  * {host['name']}: "You weren't stupid. You were in love."
-  
-- The full story unfolds with specific details:
-  * Real conversations they had
-  * Exact words that were said
-  * Physical sensations: "My hands were shaking" / "I couldn't breathe"
-  * What they saw, what they heard, what broke them
-  
-- {host['name']} validates without fixing:
-  * "That's so heavy to carry."
-  * "How did you even... how did you get through that?"
-  * Sometimes just: "Yeah." or "[long pause]" or "Damn."
-  
-- {guest['name']} reveals layers:
-  * What they told their friends vs. what really happened
-  * What they still haven't told anyone
-  * The part that still keeps them up at night
-
-**PHASE 5: THE COMPLEXITY (25-30 lines)**
-Feelings aren't simple. Explore the gray areas.
-
-- {host['name']}: "Do you ever... miss them?"
-- {guest['name']} struggles to answer honestly
-- Admits contradictions: "I hate them. But I also... I don't know."
-- {host['name']}: "You can hate what they did and still miss who they were."
-- {guest['name']}: "Is that normal? Am I crazy?"
-- They talk about the aftermath:
-  * Seeing them with someone new
-  * Mutual friends taking sides
-  * How holidays feel now
-  * Dating again (or not being able to)
-  
-- {host['name']} asks the hard question: "If they walked in right now and apologized, would you take them back?"
-- {guest['name']}'s answer is complicated, human, real
-- They discuss what moving on actually means
-- {guest['name']}: "Sometimes I check their Instagram. Is that pathetic?"
-- {host['name']}: "It's human. We all do things that don't make sense when we're healing."
-
-**PHASE 6: THE TURNING POINT (15-20 lines)**
-Finding meaning, growth, or at least acceptance.
-
-- {host['name']}: "What's different now? Like, how are YOU different?"
-- {guest['name']} reflects on what they learned
-- Maybe there's humor now: a dark joke about the situation
-- Both laugh—genuine, cathartic laughter
-- {guest['name']}: "I never thought I'd be able to laugh about this."
-- {host['name']}: "That's growth right there."
-- They talk about hope:
-  * What {guest['name']} wants now
-  * What scares them about trying again
-  * Small wins: "I stopped checking their page last week"
-  
-- {guest['name']}: "Thank you for letting me just... talk."
-- {host['name']}: "Thank you for trusting me with this."
-
-**PHASE 7: THE OUTRO (10-12 lines)**
-Wrapping up naturally, then turning to the audience.
-
-- {host['name']} to {guest['name']}: "You're gonna be okay. You know that, right?"
-- {guest['name']}: "I'm starting to believe it."
-- {host['name']}: "Good. Because you will be."
-- [Beat]
-- {host['name']} to audience:
-  * "If you made it this far, thank you for listening to {guest['name']}'s story."
-  * "If this resonated with you—if you've been there—leave a comment. Share your story. We're all figuring this out together."
-  * "And if you know someone who needs to hear this, send it to them. Sometimes we need to know we're not alone."
-  * "Hit follow for more conversations like this. Real people, real stories."
-  * "Thanks for being here. Take care of yourselves."
+**THE FORMULA:**
+1. Read {guest['name']}'s story: "{guest['persona']}"
+2. Imagine the SPECIFIC details only THIS story would have
+3. Ask about THOSE details, not generic relationship stuff
+4. React to what they say like a real person would
+5. Follow the thread of THEIR story, not a template
 
 ---
 
-**WRITING RULES FOR NATURAL FLOW:**
+**CONVERSATION STRUCTURE (250-300+ LINES):**
 
-✅ **DO THIS:**
-- Let conversations breathe with pauses: "[pause]" / "[long silence]"
-- Interrupt naturally: "I just—" "Wait, you—" "But—"
-- Circle back to earlier points: "Remember you said...?"
-- Use filler words: "like," "you know," "I mean," "kind of"
-- Show emotional progression: starts guarded → opens up → breaks down → finds strength
-- Include small human moments: 
-  * "You need a tissue?"
-  * "[laughs nervously]"
-  * "Sorry, I'm rambling."
-  * "Does that make sense?"
-- React authentically:
-  * {host['name']}: "Wow." / "I didn't see that coming." / "Oh man."
-  * {guest['name']}: "Right?!" / "I know, I know." / "Don't even get me started."
+**ACT 1: SETTLING IN (30-40 lines)**
+- Natural greeting, notice their energy
+- Small talk that reveals personality
+- Ease into the topic naturally
+- Let them decide when to start the real story
+- No "welcome to the show" - start human
 
-❌ **DON'T DO THIS:**
-- Generic therapist phrases: "How did that make you feel?" ❌
-- Jumping topics randomly ❌
-- Formal interview questions: "Let's move on to..." ❌
-- Perfectly articulated thoughts (people stumble!) ❌
-- Resolving everything neatly (life is messy) ❌
-- Making it sound scripted ❌
+**ACT 2: THE SETUP (50-70 lines)**
+- How did this situation even START?
+- Specific details about how they met this person
+- What was their life like before this happened?
+- Early warning signs they might have missed
+- Build the world so we understand the context
+- Let {guest['name']} paint the picture their way
+
+**ACT 3: THE STORY UNFOLDS (80-100 lines)**
+This is the MEAT. Dig into the specifics of THEIR unique situation.
+
+Ask questions ONLY this story would have:
+- About the specific betrayal method
+- About the other people involved (if any)
+- About the exact moment of discovery
+- About details that make THIS story different from all others
+- About what happened in the hours/days after
+
+React authentically:
+- "Wait, WHAT?" 
+- "I did not see that coming."
+- "Hold on, go back - your SISTER?!"
+- "That's insane."
+- Let the conversation flow based on what they reveal
+
+**ACT 4: THE AFTERMATH (60-80 lines)**
+What happened next? This varies HUGELY by story type.
+
+For betrayal stories:
+- The confrontation scene (blow by blow)
+- What the other person said
+- Who took whose side
+- Are they still together/married/in contact?
+
+For unrequited love stories:
+- How do they manage these feelings?
+- Does the other person know?
+- What about current relationships?
+
+For family drama stories:
+- How did holidays go after?
+- Who got cut off?
+- Any reconciliation attempts?
+
+For modern dating disasters:
+- Did they ever see them again?
+- What did their friends say?
+- Are they still on the apps?
+
+**ACT 5: WHERE THEY ARE NOW (40-60 lines)**
+Current reality. No neat bows.
+
+- What's their life like today?
+- How has this changed them?
+- Regrets? Lessons? Growth?
+- Would they do anything differently?
+- What do they want people to know?
+
+**ACT 6: THE CLOSE (20-30 lines)**
+- Final thoughts from {guest['name']}
+- {host['name']} validates their experience
+- Turn to audience with authentic CTA
+- Make it feel complete but not preachy
 
 ---
 
-**SPECIFIC STORYTELLING TECHNIQUES:**
+**CRITICAL WRITING RULES:**
 
-1. **THE BREADCRUMB METHOD:**
-   - Don't dump the whole story at once
-   - Drop hints: "That wasn't even the worst part."
-   - Build curiosity: "Wait till you hear what happened next."
-   - Let {host['name']} pick up on threads: "Wait, go back—you said your sister?"
+✅ **MAKE IT SPECIFIC TO THE STORY:**
+Every question should be something you could ONLY ask about THIS particular situation.
 
-2. **SENSORY DETAILS:**
-   - "I remember the smell of her perfume in the car."
-   - "His hands were cold when he finally told me."
-   - "I can still hear the sound of the door closing."
+Example - BAD (generic):
+- Host: "So when did you realize something was wrong?"
+- Guest: "I just had a feeling."
 
-3. **SPECIFIC MOMENTS OVER SUMMARIES:**
-   Bad: "We fought a lot." ❌
-   Good: "One night, he threw his keys at the wall so hard they left a dent. We both just stared at it." ✅
+Example - GOOD (specific to "He spent their entire life savings on crypto"):
+- Host: "Wait, so you went to buy groceries and your card got declined?"
+- Guest: "Yeah. And I was like, that's weird, we had like $50,000 last month."
+- Host: "When did you check the account?"
+- Guest: "That night. It was at $47. Forty. Seven. Dollars."
+- Host: "Jesus. What did he say when you confronted him?"
+- Guest: "That Bitcoin was about to moon and we'd be millionaires."
+- Host: "Is he a millionaire now?"
+- Guest: "He's living in his mom's basement."
 
-4. **CONTRADICTIONS = HUMANITY:**
-   - "I hate him." [pause] "I miss him." [pause] "Both things are true."
-   - "She ruined my life." [pause] "But I hope she's happy." [pause] "Is that weird?"
+✅ **LET THE CONVERSATION BREATHE:**
+- Short lines (1-3 sentences each)
+- Natural interruptions
+- Pauses and reactions
+- Backtracking when they remember something
+- "Wait, I should explain first..."
+- "Actually, that's not even the worst part."
+
+✅ **REACT LIKE A REAL PERSON:**
+{host['name']} is not a therapist. They're a human having a conversation.
+- "That's wild."
+- "I would've lost it."
+- "You're stronger than me."
+- "I can't believe they said that."
+- Sometimes just: "Wow." or "[long pause]"
+
+✅ **INCLUDE CONTRADICTIONS:**
+Real people have messy feelings:
+- "I hate them. But I miss them."
+- "It was the worst thing that ever happened to me. But I'm weirdly grateful now?"
+- "I know I should move on. But what if they come back?"
+
+✅ **USE THE 5 W's FOR SPECIFICITY:**
+- WHO exactly was involved? Names, relationships, ages
+- WHAT exactly happened? Actions, words, locations
+- WHEN exactly? Time of day, season, how long ago
+- WHERE exactly? Their house, a car, a restaurant, social media
+- WHY did this happen? (Or why do they think it happened?)
+
+---
+
+**STRATEGIC CLIFFHANGERS (for multi-part engagement):**
+
+Place natural "OMG WHAT?!" moments around:
+
+**Line 75-85 (End of Part 1):**
+The first major reveal or twist in the story.
+- "And that's when I found out they had a whole other family."
+- "Turns out, my best friend had known the whole time."
+- "I opened the door and saw them. Together."
+
+**Line 150-165 (End of Part 2):**
+The confrontation or worst moment.
+- "So I told them exactly what I found. And they LAUGHED."
+- "I asked if they loved me. They said... nothing."
+- "That's when I realized they'd been lying about everything."
+
+**Line 225-240 (End of Part 3):**
+Current complications or unresolved feelings.
+- "And I saw them last week. At my workplace. With their new partner."
+- "Sometimes I think about reaching out. Is that crazy?"
+- "The worst part? I still check their Instagram every single day."
+
+**Line 280-300 (End - Resolution):**
+Final thoughts, growth, message to audience.
+
+---
+
+**TONE VARIATIONS BY STORY TYPE:**
+
+**Betrayal/Cheating stories:** Angry → Hurt → Processing → Growth
+**Unrequited love stories:** Longing → Frustration → Acceptance → Hope
+**Family drama stories:** Confused → Angry → Sad → Boundaries
+**Modern dating disasters:** Shocked → Amused → Frustrated → Cautious
+**Toxic relationship stories:** Defensive → Realization → Escape → Healing
+
+Match the emotional arc to the story type.
 
 ---
 
 **OUTPUT FORMAT:**
 
-Return ONLY valid JSON:
-
 {{
   "dialogue": [
-    {{"speaker_id": {host['id']}, "text": "Hey. You okay? You look like you're about to bolt."}},
-    {{"speaker_id": {guest['id']}, "text": "I'm... yeah, I'm fine. Just nervous, I guess. Is that weird?"}},
-    {{"speaker_id": {host['id']}, "text": "Not at all. Most people are. You want some water before we start?"}}
+    {{"speaker_id": {host['id']}, "text": "[Opening line specific to this story]"}},
+    {{"speaker_id": {guest['id']}, "text": "[Response]"}},
+    {{"speaker_id": {host['id']}, "text": "[Follow-up question based on their answer]"}}
   ]
 }}
 
 **ABSOLUTE REQUIREMENTS:**
-1. ONLY use speaker_id: {host['id']} (for {host['name']}) and {guest['id']} (for {guest['name']})
-2. 130-150 lines minimum
-3. Natural progression—no jumps
-4. Specific details, not generic statements
-5. Emotional honesty—messy, real, human
-6. Build trust gradually—don't rush to the trauma
-7. One host ({host['name']}), one guest ({guest['name']})—that's it
+1. ONLY use speaker_id: {host['id']} for {host['name']}, {guest['id']} for {guest['name']}
+2. 250-300+ lines MINIMUM (8-10 minutes audio)
+3. Every question must be SPECIFIC to "{guest['persona']}"
+4. No generic therapy speak
+5. Natural, reactive conversation flow
+6. Strategic cliffhangers for multi-part engagement
+7. Emotional authenticity over polish
 
-Write a conversation that feels like eavesdropping on two people who genuinely care about each other's stories. Make it REAL.
+---
+
+**FINAL CHECK BEFORE YOU WRITE:**
+
+Read the story again: "{guest['persona']}"
+
+Ask yourself:
+- What are the UNIQUE details this story would have that others wouldn't?
+- What would I be dying to know if my friend told me this story?
+- What's the most shocking/surprising/interesting part of THIS specific situation?
+- How would a real conversation about THIS unfold?
+
+Then write THAT conversation. Not a template. Not a format. The actual, messy, specific, can't-look-away conversation about {guest['name']}'s unique experience.
+
+Make it so specific that if someone heard this without context, they'd know EXACTLY which story it is.
+
+GO.
 """
 
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=config.GROQ_LLM_MODEL,
-                temperature=0.9,  # Higher temp for more natural, less formulaic responses
+                temperature=0.95,  # Even higher for more unique, creative responses
                 max_tokens=8000,
                 response_format={"type": "json_object"}, 
             )
@@ -296,8 +329,11 @@ Write a conversation that feels like eavesdropping on two people who genuinely c
             self.logger.info(f"[{show_id}] Script generated. Length: {len(script)} lines.")
             
             # Validation check
-            if len(script) < 130:
-                self.logger.warning(f"Script only has {len(script)} lines (target: 130+)")
+            if len(script) < 250:
+                self.logger.warning(f"Script only has {len(script)} lines (target: 250+). Audio may be shorter than 8 minutes.")
+            else:
+                estimated_minutes = (len(script) * 2) / 60  # Rough estimate: 2 seconds per line
+                self.logger.info(f"Estimated audio length: ~{estimated_minutes:.1f} minutes")
             
             return script
 
