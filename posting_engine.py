@@ -9,6 +9,7 @@ Handles publishing video parts to social media platforms (Facebook).
 import time
 import logging
 import requests
+from pathlib import Path  # <--- Added this
 from typing import List, Dict
 
 import config
@@ -168,4 +169,5 @@ class PostingEngine:
         if finish_response.json().get('success'):
             self.logger.info(f"[{self.show_id}] Facebook API confirmed successful publishing of video ID: {video_id}")
         else:
+
             raise RuntimeError(f"Facebook API did not confirm success. Response: {finish_response.json()}")
